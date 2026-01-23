@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ENTROPY // MENTAL STATE</title>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #050505;
+            --neon-purple: #8b2fc9;
+            --deep-purple: #2e004f;
+            --text-color: #e0e0e0;
+            --glitch-color-1: #00ffff;
+            --glitch-color-2: #ff00ff;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            cursor: none;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Share Tech Mono', monospace;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        /* Ambient Background Layers */
+        .fog-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            opacity: 0.4;
+            mix-blend-mode: screen;
+        }
+
+        .fog {
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, var(--deep-purple) 0%, transparent 60%);
+            animation: fogDrift 30s linear infinite;
+            filter: blur(80px);
+        }
+
+        .fog:nth-child(2) {
+            top: -50%;
+            left: -50%;
+            background: radial-gradient(circle, var(--neon-purple) 0%, transparent 50%);
+            animation: fogDrift 45s linear infinite reverse;
+            opacity: 0.3;
+        }
+
+        @keyframes fogDrift {
+            0% {
+                transform: translate(0, 0) rotate(0deg);
+            }
+
+            100% {
+                transform: translate(-20%, -20%) rotate(10deg);
+            }
+        }
+
+        /* Noise & Glitch Overlay */
+        .noise {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
+            z-index: 10;
+            pointer-events: none;
+            opacity: 0.15;
+        }
+
+        .scanlines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 0, 0, 0.5) 3px);
+            z-index: 11;
+            pointer-events: none;
+            opacity: 0.3;
+        }
+
+        /* Text Container */
+        #text-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 20;
+            text-align: center;
+            width: 80%;
+            mix-blend-mode: lighten;
+        }
+
+        .phrase {
+            font-size: 2rem;
+            letter-spacing: 5px;
+            text-transform: uppercase;
+            opacity: 0;
+            transition: opacity 2s ease, filter 0.2s ease;
+            text-shadow: 0 0 10px var(--neon-purple);
+            position: absolute;
+            width: 100%;
+            left: 0;
+        }
+
+        .phrase.active {
+            opacity: 1;
+        }
+
+        .glitch-text {
+            animation: textGlitch 3s infinite alternate-reverse;
+        }
+
+        @keyframes textGlitch {
+            0% {
+                transform: translate(0);
+                text-shadow: 0 0 10px var(--neon-purple);
+            }
+
+            2% {
+                transform: translate(-2px, 2px);
+                text-shadow: 2px 0 var(--glitch-color-1), -2px 0 var(--glitch-color-2);
+            }
+
+            4% {
+                transform: translate(0);
+                text-shadow: 0 0 10px var(--neon-purple);
+            }
+
+            100% {
+                transform: translate(0);
+            }
+        }
+
+        /* Canvas for Visualizer */
+        #visualizer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 5;
+        }
+
+        /* Overlay for Start */
+        #start-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 100;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            cursor: pointer;
+        }
+
+        #start-text {
+            border: 1px solid var(--neon-purple);
+            padding: 20px 40px;
+            color: var(--neon-purple);
+            letter-spacing: 5px;
+            font-size: 1.2rem;
+            text-transform: uppercase;
+            box-shadow: 0 0 20px rgba(139, 47, 201, 0.2);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        #start-text:hover {
+            background: var(--neon-purple);
+            color: black;
+            box-shadow: 0 0 40px rgba(139, 47, 201, 0.6);
+        }
+
+        /* Custom Cursor */
+        #cursor {
+            width: 20px;
+            height: 20px;
+            border: 1px solid var(--neon-purple);
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            transform: translate(-50%, -50%);
+            transition: width 0.2s, height 0.2s;
+            mix-blend-mode: diff;
+        }
+
+        #cursor.pulse {
+            width: 50px;
+            height: 50px;
+            background: rgba(139, 47, 201, 0.1);
+        }
+
+        .disclaimer {
+            font-size: 0.7rem;
+            color: #555;
+            margin-top: 20px;
+            letter-spacing: 2px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Ambient Layers -->
+    <div class="fog-container">
+        <div class="fog"></div>
+        <div class="fog"></div>
+    </div>
+    <div class="noise"></div>
+    <div class="scanlines"></div>
+
+    <!-- WebGL/Canvas Visualizer -->
+    <canvas id="visualizer"></canvas>
+
+    <!-- Text Layer -->
+    <div id="text-container">
+        <div class="phrase">What if this isn't the original timeline?</div>
+        <div class="phrase">Entropy doesn't destroy, it rearranges.</div>
+        <div class="phrase">Speed doesn't silence thoughts.</div>
+        <div class="phrase">Time is fluid in the dark.</div>
+        <div class="phrase">We are just static in the void.</div>
+    </div>
+
+    <!-- Start Interaction -->
+    <div id="start-overlay">
+        <div id="start-text">INITIALIZE SEQUENCE</div>
+        <div class="disclaimer">USE HEADPHONES // FULLSCREEN RECOMMENDED</div>
+    </div>
+
+    <div id="cursor"></div>
+
+    <script>
+        // --- CONFIGURATION ---
+        const AUDIO_PATH = 'entropy.mp3';
+        const phrases = document.querySelectorAll('.phrase');
+        let currentPhrase = 0;
+
+        // --- AUDIO SYSTEM ---
+        let audioContext, analyser, source, bufferLength, dataArray;
+        let audioElement;
+        let isSimulation = false;
+
+        // --- CANVAS SETUP ---
+        const canvas = document.getElementById('visualizer');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        // --- MOUSE PARALLAX ---
+        const fogLayers = document.querySelectorAll('.fog');
+        let mouseX = 0, mouseY = 0;
+        const cursor = document.getElementById('cursor');
+
+        document.addEventListener('mousemove', (e) => {
+            mouseX = (e.clientX / window.innerWidth) - 0.5;
+            mouseY = (e.clientY / window.innerHeight) - 0.5;
+
+            // Move cursor
+            cursor.style.left = e.clientX + 'px';
+            cursor.style.top = e.clientY + 'px';
+
+            // Parallax
+            fogLayers.forEach((layer, index) => {
+                const speed = (index + 1) * 30;
+                layer.style.transform = `translate(${mouseX * speed}px, ${mouseY * speed}px)`;
+            });
+        });
+
+        // --- VISUALIZATION LOOP ---
+        function initAudio() {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            audioElement = new Audio(AUDIO_PATH);
+            audioElement.loop = true;
+            // Removed crossOrigin for local file support
+
+            try {
+                // Try to create real audio source
+                source = audioContext.createMediaElementSource(audioElement);
+                analyser = audioContext.createAnalyser();
+                analyser.fftSize = 256;
+
+                source.connect(analyser);
+                analyser.connect(audioContext.destination);
+
+                bufferLength = analyser.frequencyBinCount;
+                dataArray = new Uint8Array(bufferLength);
+                isSimulation = false;
+            } catch (e) {
+                // Fallback if CORS blocks it (likely locally)
+                console.warn("CORS/Security Policy restricted Web Audio API. Switching to Simulation Mode.", e);
+                isSimulation = true;
+                dataArray = null;
+            }
+
+            audioElement.play().catch(e => console.error("Audio Play Error:", e));
+
+            // Remove overlay
+            const overlay = document.getElementById('start-overlay');
+            overlay.style.opacity = '0';
+            setTimeout(() => overlay.remove(), 1000);
+
+            // Start cycles
+            renderFrame();
+            cycleText();
+        }
+
+        function renderFrame() {
+            requestAnimationFrame(renderFrame);
+
+            // Clear canvas with trail effect
+            ctx.fillStyle = 'rgba(5, 5, 5, 0.2)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            let bass = 0, mid = 0, high = 0;
+
+            if (!isSimulation && analyser && dataArray) {
+                // Real Data
+                analyser.getByteFrequencyData(dataArray);
+                bass = dataArray.slice(0, 10).reduce((a, b) => a + b) / 10;
+                mid = dataArray.slice(20, 100).reduce((a, b) => a + b) / 80;
+                high = dataArray.slice(100, 200).reduce((a, b) => a + b) / 100;
+            } else {
+                // SIMULATION MODE
+                const t = Date.now() / 1000;
+                bass = (Math.sin(t * 3) * 50 + 100) + (Math.random() * 20);
+                mid = 50 + Math.random() * 50;
+                high = (Math.random() > 0.9) ? 100 : 0;
+            }
+
+            // 1. Bass Pulse (Center) - Only pulse if we have bass (real or fake)
+            const radius = (bass / 255) * 200 + 50;
+            ctx.beginPath();
+            ctx.arc(canvas.width / 2, canvas.height / 2, radius, 0, Math.PI * 2);
+            ctx.strokeStyle = `rgba(139, 47, 201, ${bass / 400})`;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Cursor Pulse
+            if (bass > 180) {
+                cursor.classList.add('pulse');
+            } else {
+                cursor.classList.remove('pulse');
+            }
+
+            // 2. Road Lines (Mid Frequencies)
+            const centerX = canvas.width / 2;
+            const centerRadius = 150;
+            const bars = 60;
+            const angleStep = (Math.PI * 2) / bars;
+
+            for (let i = 0; i < bars; i++) {
+                let value;
+                if (!isSimulation && dataArray) {
+                    value = dataArray[i * 2];
+                } else {
+                    // Fake bar data
+                    value = (Math.sin((Date.now() / 500) + i) * 50 + 100) * (Math.random() > 0.5 ? 1.2 : 0.8);
+                }
+
+                const height = (value / 255) * 200;
+                const angle = i * angleStep;
+
+                const x = centerX + Math.cos(angle) * centerRadius;
+                const y = (canvas.height / 2) + Math.sin(angle) * centerRadius;
+
+                const endX = centerX + Math.cos(angle) * (centerRadius + height);
+                const endY = (canvas.height / 2) + Math.sin(angle) * (centerRadius + height);
+
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+                ctx.lineTo(endX, endY);
+                ctx.strokeStyle = `rgba(139, 47, 201, ${value / 255})`;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+
+            // 3. High Freq Glitch Particles
+            if (high > 50) {
+                for (let i = 0; i < 5; i++) {
+                    const x = Math.random() * canvas.width;
+                    const y = Math.random() * canvas.height;
+                    const size = Math.random() * 3;
+
+                    ctx.fillStyle = Math.random() > 0.5 ? '#00ffff' : '#ff00ff';
+                    ctx.fillRect(x, y, size, size);
+                }
+            }
+        }
+
+        // --- TEXT LOGIC ---
+        function cycleText() {
+            phrases.forEach(p => p.classList.remove('active'));
+            phrases[currentPhrase].classList.add('active');
+
+            if (Math.random() > 0.7) {
+                phrases[currentPhrase].classList.add('glitch-text');
+            } else {
+                phrases[currentPhrase].classList.remove('glitch-text');
+            }
+
+            currentPhrase = (currentPhrase + 1) % phrases.length;
+            setTimeout(cycleText, 4000 + Math.random() * 4000);
+        }
+
+        // --- RESIZE ---
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+        // --- START ---
+        document.getElementById('start-overlay').addEventListener('click', initAudio);
+
+    </script>
+</body>
+
+</html>
