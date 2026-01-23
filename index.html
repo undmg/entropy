@@ -178,15 +178,16 @@
         // --- OBJECTS ---
 
         // 1. The Core (Spiky Icosahedron)
-        const geometry = new THREE.IcosahedronGeometry(1.5, 30); // High detail for spikes
+        // 1. The Core (Smooth Sphere)
+        const geometry = new THREE.SphereGeometry(1.5, 128, 128);
         const material = new THREE.MeshStandardMaterial({
             color: 0x120a2e, // Dark Deep Purple/Blue
             wireframe: true,
             emissive: 0x00ff88, // Greenish emission base
-            emissiveIntensity: 0.4,
+            emissiveIntensity: 0.2, // Reduced brightness
             roughness: 0.2,
             metalness: 0.8,
-            flatShading: true // Enhances spiky look
+            flatShading: false // Smooth shading for "perfect sphere" look
         });
         const core = new THREE.Mesh(geometry, material);
         scene.add(core);
@@ -257,9 +258,9 @@
         composer.addPass(renderPass);
 
         const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
-        bloomPass.threshold = 0.1;
-        bloomPass.strength = 1.0;
-        bloomPass.radius = 0.6;
+        bloomPass.threshold = 0.2; // Higher threshold = less glow on darks
+        bloomPass.strength = 0.5; // Reduced intensity
+        bloomPass.radius = 0.5;
         composer.addPass(bloomPass);
 
         const glitchPass = new GlitchPass();
