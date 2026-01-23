@@ -4,12 +4,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ENTROPY // 3D STATE</title>
+    <title>ENTROPY // TWILIGHT STATE</title>
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
         :root {
             --text-color: #e0e0e0;
-            --neon-purple: #8b2fc9;
+            --neon-primary: #00ffaa;
+            /* Green/Cyan */
+            --neon-secondary: #8b00ff;
+            /* Deep Purple */
         }
 
         * {
@@ -19,7 +22,8 @@
         }
 
         body {
-            background-color: #000;
+            background-color: #050510;
+            /* Dark Twilight Blue */
             color: var(--text-color);
             font-family: 'Share Tech Mono', monospace;
             overflow: hidden;
@@ -55,7 +59,7 @@
             text-transform: uppercase;
             opacity: 0;
             transition: opacity 2s ease;
-            text-shadow: 0 0 20px var(--neon-purple);
+            text-shadow: 0 0 20px var(--neon-secondary);
             position: absolute;
             width: 100%;
             left: 0;
@@ -73,7 +77,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.85);
+            background: rgba(5, 5, 16, 0.9);
             backdrop-filter: blur(10px);
             z-index: 100;
             display: flex;
@@ -85,20 +89,20 @@
         }
 
         #start-text {
-            border: 1px solid var(--neon-purple);
+            border: 1px solid var(--neon-primary);
             padding: 20px 50px;
-            color: var(--neon-purple);
+            color: var(--neon-primary);
             letter-spacing: 5px;
             font-size: 1.5rem;
             text-transform: uppercase;
-            box-shadow: 0 0 30px rgba(139, 47, 201, 0.3);
+            box-shadow: 0 0 30px rgba(0, 255, 170, 0.2);
             transition: all 0.4s ease;
         }
 
         #start-text:hover {
-            background: var(--neon-purple);
+            background: var(--neon-primary);
             color: black;
-            box-shadow: 0 0 60px rgba(139, 47, 201, 0.8);
+            box-shadow: 0 0 60px rgba(0, 255, 170, 0.6);
             transform: scale(1.05);
         }
 
@@ -133,18 +137,18 @@
 
     <div id="ui-layer">
         <div id="text-container">
-            <div class="phrase">What if this isn't the original timeline?</div>
-            <div class="phrase">Entropy doesn't destroy, it rearranges.</div>
-            <div class="phrase">Speed doesn't silence thoughts.</div>
-            <div class="phrase">Time is fluid in the dark.</div>
-            <div class="phrase">We are just static in the void.</div>
+            <div class="phrase">Reality is a frequency.</div>
+            <div class="phrase">The void stares back.</div>
+            <div class="phrase">Static thoughts in a fluid mind.</div>
+            <div class="phrase">Entropy is beautiful chaos.</div>
+            <div class="phrase">We are just light and noise.</div>
         </div>
-        <div id="loading">...LOADING NEURAL LINK...</div>
+        <div id="loading">...NEURAL LINK ESTABLISHED...</div>
     </div>
 
     <div id="start-overlay">
-        <div id="start-text">ENTER THE VOID</div>
-        <div class="disclaimer">HEADPHONES REQUIRED // 3D EXPERIENCE</div>
+        <div id="start-text">INITIALIZE SEQUENCE</div>
+        <div class="disclaimer">HEADPHONES REQUIRED // TWILIGHT STATE</div>
     </div>
 
     <script type="module">
@@ -154,19 +158,18 @@
         import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
         import { GlitchPass } from 'three/addons/postprocessing/GlitchPass.js';
         import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
-        import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 
         // --- CONFIG ---
         const AUDIO_PATH = 'entropy.mp3';
 
         // --- SCENE SETUP ---
         const scene = new THREE.Scene();
-        scene.fog = new THREE.FogExp2(0x000000, 0.02);
+        scene.fog = new THREE.FogExp2(0x050510, 0.025); // Twilight Fog (Dark Blue-ish)
 
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.z = 5;
+        camera.position.z = 6;
 
-        const renderer = new THREE.WebGLRenderer({ antialias: false });
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setPixelRatio(window.devicePixelRatio);
         renderer.toneMapping = THREE.ReinhardToneMapping;
@@ -174,36 +177,63 @@
 
         // --- OBJECTS ---
 
-        // 1. The Core (Deforming Sphere)
-        const geometry = new THREE.IcosahedronGeometry(1.5, 4); // High detail for displacement
+        // 1. The Core (Spiky Icosahedron)
+        const geometry = new THREE.IcosahedronGeometry(1.5, 30); // High detail for spikes
         const material = new THREE.MeshStandardMaterial({
-            color: 0x2e004f,
+            color: 0x120a2e, // Dark Deep Purple/Blue
             wireframe: true,
-            emissive: 0x8b2fc9,
-            emissiveIntensity: 0.5,
-            roughness: 0.1,
-            metalness: 0.9
+            emissive: 0x00ff88, // Greenish emission base
+            emissiveIntensity: 0.4,
+            roughness: 0.2,
+            metalness: 0.8,
+            flatShading: true // Enhances spiky look
         });
         const core = new THREE.Mesh(geometry, material);
         scene.add(core);
 
-        // Store original positions for deformation
+        // Store original positions
         const positionAttribute = geometry.getAttribute('position');
         const originalPositions = Array.from(positionAttribute.array);
 
-        // 2. Particle Field (Stars/Dust)
-        const particlesGeometry = new THREE.BufferGeometry();
-        const particlesCount = 3000;
-        const posArray = new Float32Array(particlesCount * 3);
+        // 2. Saturn Ring
+        const ringGeo = new THREE.RingGeometry(2.5, 3.2, 128);
+        const ringMat = new THREE.MeshBasicMaterial({
+            color: 0x5000ff, // Indigo/Purple
+            wireframe: true,
+            side: THREE.DoubleSide,
+            transparent: true,
+            opacity: 0.6
+        });
+        const ring = new THREE.Mesh(ringGeo, ringMat);
+        ring.rotation.x = Math.PI / 2.3; // Tilted
+        scene.add(ring);
 
-        for (let i = 0; i < particlesCount * 3; i++) {
-            posArray[i] = (Math.random() - 0.5) * 40; // Spread out
+        // 3. Particle Field (Twilight Dust: Green/Blue/Purple)
+        const particlesGeometry = new THREE.BufferGeometry();
+        const particlesCount = 4000;
+        const posArray = new Float32Array(particlesCount * 3);
+        const colorArray = new Float32Array(particlesCount * 3);
+
+        const color1 = new THREE.Color(0x00ffaa); // Green/Cyan
+        const color2 = new THREE.Color(0x5500ff); // Purple
+
+        for (let i = 0; i < particlesCount * 3; i += 3) {
+            posArray[i] = (Math.random() - 0.5) * 60;
+            posArray[i + 1] = (Math.random() - 0.5) * 60;
+            posArray[i + 2] = (Math.random() - 0.5) * 60;
+
+            const mixedColor = color1.clone().lerp(color2, Math.random());
+            colorArray[i] = mixedColor.r;
+            colorArray[i + 1] = mixedColor.g;
+            colorArray[i + 2] = mixedColor.b;
         }
 
         particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+        particlesGeometry.setAttribute('color', new THREE.BufferAttribute(colorArray, 3));
+
         const particlesMaterial = new THREE.PointsMaterial({
-            size: 0.03,
-            color: 0xb026ff,
+            size: 0.04,
+            vertexColors: true,
             transparent: true,
             opacity: 0.6,
             blending: THREE.AdditiveBlending
@@ -211,13 +241,13 @@
         const particleMesh = new THREE.Points(particlesGeometry, particlesMaterial);
         scene.add(particleMesh);
 
-        // 3. Ambient Lights
-        const pointLight = new THREE.PointLight(0xff00ff, 1);
+        // 4. Lights (Green + Purple Mix)
+        const pointLight = new THREE.PointLight(0x00ff88, 1.5); // Green/Cyan
         pointLight.position.set(5, 5, 5);
         scene.add(pointLight);
 
-        const pointLight2 = new THREE.PointLight(0x5500ff, 1);
-        pointLight2.position.set(-5, -5, -5);
+        const pointLight2 = new THREE.PointLight(0x8b00ff, 1.5); // Purple
+        pointLight2.position.set(-5, -3, -5);
         scene.add(pointLight2);
 
         // --- POST PROCESSING ---
@@ -228,13 +258,13 @@
 
         const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
         bloomPass.threshold = 0.1;
-        bloomPass.strength = 1.2; // Intense bloom
-        bloomPass.radius = 0.5;
+        bloomPass.strength = 1.0;
+        bloomPass.radius = 0.6;
         composer.addPass(bloomPass);
 
         const glitchPass = new GlitchPass();
         glitchPass.goWild = false;
-        glitchPass.enabled = false; // Triggered by audio
+        glitchPass.enabled = false;
         composer.addPass(glitchPass);
 
         const outputPass = new OutputPass();
@@ -273,7 +303,6 @@
                 isPlaying = true;
                 document.getElementById('start-overlay').style.opacity = '0';
                 setTimeout(() => document.getElementById('start-overlay').remove(), 1000);
-
                 animate();
                 cycleText();
             }).catch(e => console.error(e));
@@ -285,7 +314,7 @@
 
         function animate() {
             requestAnimationFrame(animate);
-            time += 0.002;
+            time += 0.003; // Slow base speed
 
             // Audio Analysis
             let bass = 0, mid = 0, high = 0;
@@ -297,16 +326,19 @@
                 high = dataArray.slice(100, 200).reduce((a, b) => a + b, 0) / 100;
             } else {
                 // Simulation
-                bass = (Math.sin(time * 4) * 0.5 + 0.5) * 150 + (Math.random() * 50);
-                mid = 50 + Math.random() * 50;
-                high = (Math.random() > 0.95) ? 150 : 0;
+                bass = (Math.sin(time * 3) * 0.5 + 0.5) * 120;
+                mid = 50 + Math.cos(time * 1.5) * 40;
+                high = (Math.random() > 0.98) ? 150 : 0;
             }
 
-            const bassNorm = bass / 255;
+            // Clean Noise Floor (Fixes "vibration at low volume")
+            const noiseFloor = 20;
+            const cleanBass = Math.max(0, bass - noiseFloor);
+            const bassNorm = cleanBass / (255 - noiseFloor);
             const midNorm = mid / 255;
+            const highNorm = high / 255;
 
-            // 1. Core Deformation (Vertex Shader-like effect on CPU)
-            // Heavy calculation? Maybe simplify for performance if needed, but 1.5/4 Ico is okay.
+            // 1. Spiky Core Deformation
             const positions = geometry.getAttribute('position');
             const count = positions.count;
 
@@ -315,41 +347,58 @@
                 const oy = originalPositions[i * 3 + 1];
                 const oz = originalPositions[i * 3 + 2];
 
-                // Noise-like displacement based on time + audio
-                const noise = Math.sin(ox * 2 + time * 2) * Math.cos(oy * 2 + time);
-                const displace = 1 + (noise * midNorm * 0.5) + (bassNorm * 0.3);
+                // "Spiky" Calculations
+                // Use a sharp power function on high frequency noise
+                const ang = Math.atan2(oy, ox);
+                const spikeNoise = Math.pow(Math.abs(Math.sin(ang * 10 + time)), 5) * Math.cos(oz * 4 + time);
+
+                // Base displacement + Spikes triggered by MID/HIGH frequencies
+                const displace = 1 + (spikeNoise * (midNorm * 0.6 + 0.1)) + (bassNorm * 0.2);
 
                 positions.setXYZ(i, ox * displace, oy * displace, oz * displace);
             }
             positions.needsUpdate = true;
+            geometry.computeVertexNormals();
 
-            // Core Rotation & Color
-            core.rotation.y += 0.005 + (bassNorm * 0.02);
-            core.rotation.z += 0.002;
+            // Core Rotation 
+            core.rotation.y += 0.002;
+            core.rotation.z -= 0.001;
 
-            // Dynamic Color Shift
-            const hue = (0.75 + (bassNorm * 0.1)) % 1; // Purple to Pink/Red
-            material.emissive.setHSL(hue, 0.8, 0.5 * bassNorm + 0.2);
+            // Pulse Color between Green and Purple
+            const targetColor = new THREE.Color().setHSL(0.4 + midNorm * 0.15, 0.9, 0.5); // Green/Cyan range
+            material.emissive.lerp(targetColor, 0.1);
 
-            // 2. Camera Movement (Dreamlike Orbit)
-            // 2. Camera Movement (Dreamlike Orbit) - Slowed & damped
-            camera.position.x = Math.sin(time * 0.2) * (5 + midNorm * 0.5);
-            camera.position.y = Math.cos(time * 0.3) * (2 + bassNorm * 0.5);
-            camera.position.z = Math.cos(time * 0.2) * (5 + midNorm * 0.5);
-            camera.lookAt(0, 0, 0);
+            // 2. Saturn Ring Reaction
+            // Scale increases on bass/mid
+            const ringScale = 1 + (bassNorm * 0.25);
+            ring.scale.set(ringScale, ringScale, 1);
 
-            // Subtle Shake on Bass
-            if (bass > 200) {
-                camera.position.x += (Math.random() - 0.5) * 0.2;
-                camera.position.y += (Math.random() - 0.5) * 0.2;
+            // Jitter/Rotate ring on high freq
+            ring.rotation.z += 0.002 + (highNorm * 0.02);
+            if (high > 220) {
+                ring.rotation.x = (Math.PI / 2.3) + (Math.random() * 0.1); // Jitter tilt
+            } else {
+                ring.rotation.x += ((Math.PI / 2.3) - ring.rotation.x) * 0.1; // Return to original tilt
             }
 
-            // 3. Particles
-            particleMesh.rotation.y -= 0.002;
-            particlesMaterial.size = 0.03 + (high / 255) * 0.05;
+            // 3. Camera Movement (Smoothed & Reduced)
+            camera.position.x = Math.sin(time * 0.15) * 6;
+            camera.position.z = Math.cos(time * 0.15) * 6;
+            camera.position.y = Math.sin(time * 0.1) * 2;
+            camera.lookAt(0, 0, 0);
 
-            // 4. Glitch Effect Trigger
-            glitchPass.enabled = (high > 180 || (Math.random() > 0.99 && bass > 200));
+            // Shake - FIXED: High threshold, low amplitude
+            if (bass > 245) { // Only on very strong hits
+                const shake = 0.05;
+                camera.position.x += (Math.random() - 0.5) * shake;
+                camera.position.y += (Math.random() - 0.5) * shake;
+            }
+
+            // 4. Particles
+            particleMesh.rotation.y -= 0.0005;
+
+            // 5. Glitch Effect (Rare)
+            glitchPass.enabled = (high > 240);
 
             // Render
             composer.render();
@@ -363,7 +412,7 @@
             composer.setSize(window.innerWidth, window.innerHeight);
         });
 
-        // --- TEXT CYCLE (From previous version) ---
+        // --- TEXT CYCLE ---
         const phrases = document.querySelectorAll('.phrase');
         let currentPhrase = 0;
 
