@@ -381,8 +381,8 @@
             </g>
 
             <!-- lid edges, waterline and lashes (redrawn as the lids move) -->
-            <path class="eye-waterline" fill="none" stroke="${t.waterline}" stroke-width="2.6" stroke-linecap="round" opacity="0.95"/>
-            <path class="eye-wet" fill="none" stroke="#fff" stroke-width="0.7" opacity="0.55"/>
+            <path class="eye-waterline" fill="none" stroke="${t.waterline}" stroke-width="2.2" stroke-linecap="round" opacity="0.95"/>
+            <path class="eye-lowlid" fill="none" stroke="${t.lidEdge}" stroke-width="0.9" stroke-linecap="round" opacity="0.4"/>
             <path class="eye-lidline" fill="none" stroke="${t.lidEdge}" stroke-width="3.2" stroke-linecap="round"/>
             <g class="eye-lashes-low">${lowerEls}</g>
             <g class="eye-lashes">${lashEls}</g>`;
@@ -399,7 +399,7 @@
             lidShadow: svg.querySelector('.eye-lidshadow'),
             lowShadow: svg.querySelector('.eye-lowshadow'),
             waterline: svg.querySelector('.eye-waterline'),
-            wet: svg.querySelector('.eye-wet'),
+            lowlid: svg.querySelector('.eye-lowlid'),
             lidline: svg.querySelector('.eye-lidline'),
             lashes: [...svg.querySelectorAll('.lash')],
             lower: [...svg.querySelectorAll('.lash-low')],
@@ -429,11 +429,12 @@
         el.fold.setAttribute('d', `M26 52 C62 ${(creaseC + 9).toFixed(1)} 138 ${(creaseC + 9).toFixed(1)} 174 52`);
         el.lidShadow.setAttribute('d', `M8 ${60 - 3} C52 ${(c - 3).toFixed(1)} 148 ${(c - 3).toFixed(1)} 192 ${60 - 3}`);
         el.lowShadow.setAttribute('d', low);
-        el.waterline.setAttribute('d', `M14 61 C54 ${(d - 3.2).toFixed(1)} 146 ${(d - 3.2).toFixed(1)} 186 61`);
-        el.wet.setAttribute('d', `M30 62 C62 ${(d - 6).toFixed(1)} 138 ${(d - 6).toFixed(1)} 170 62`);
+        // waterline sits right on the lower-lid edge (no gap above it), with a thin skin margin below
+        el.waterline.setAttribute('d', `M12 60.6 C53 ${(d - 1.2).toFixed(2)} 147 ${(d - 1.2).toFixed(2)} 188 60.6`);
+        el.lowlid.setAttribute('d', `M8 60 C52 ${(d + 1.1).toFixed(2)} 148 ${(d + 1.1).toFixed(2)} 192 60`);
         el.lidline.setAttribute('d', up);
         el.waterline.style.opacity = (0.95 * s.open).toFixed(2);
-        el.wet.style.opacity = (0.55 * s.open).toFixed(2);
+        el.lowlid.style.opacity = (0.4 * s.open).toFixed(2);
 
         // upper lashes: sweep up and out when open, droop down when the lid closes
         const n = el.lashes.length;
