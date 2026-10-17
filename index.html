@@ -4,448 +4,209 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ENTROPY // TWILIGHT STATE</title>
-    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --text-color: #e0e0e0;
-            --neon-primary: #00ffaa;
-            /* Green/Cyan */
-            --neon-secondary: #8b00ff;
-            /* Deep Purple */
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            background-color: #050510;
-            /* Dark Twilight Blue */
-            color: var(--text-color);
-            font-family: 'Share Tech Mono', monospace;
-            overflow: hidden;
-            width: 100vw;
-            height: 100vh;
-        }
-
-        /* UI Overlays */
-        #ui-layer {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 10;
-        }
-
-        /* Text Container */
-        #text-container {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            text-align: center;
-            width: 80%;
-            mix-blend-mode: overlay;
-        }
-
-        .phrase {
-            font-size: 2.5rem;
-            letter-spacing: 8px;
-            text-transform: uppercase;
-            opacity: 0;
-            transition: opacity 2s ease;
-            text-shadow: 0 0 20px var(--neon-secondary);
-            position: absolute;
-            width: 100%;
-            left: 0;
-            font-weight: bold;
-        }
-
-        .phrase.active {
-            opacity: 1;
-        }
-
-        /* Start Overlay */
-        #start-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(5, 5, 16, 0.9);
-            backdrop-filter: blur(10px);
-            z-index: 100;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            cursor: pointer;
-            pointer-events: auto;
-        }
-
-        #start-text {
-            border: 1px solid var(--neon-primary);
-            padding: 20px 50px;
-            color: var(--neon-primary);
-            letter-spacing: 5px;
-            font-size: 1.5rem;
-            text-transform: uppercase;
-            box-shadow: 0 0 30px rgba(0, 255, 170, 0.2);
-            transition: all 0.4s ease;
-        }
-
-        #start-text:hover {
-            background: var(--neon-primary);
-            color: black;
-            box-shadow: 0 0 60px rgba(0, 255, 170, 0.6);
-            transform: scale(1.05);
-        }
-
-        .song-credit {
-            font-size: 1.2rem;
-            color: #fff;
-            margin-top: 15px;
-            letter-spacing: 6px;
-            text-transform: uppercase;
-            text-shadow: 0 0 10px var(--neon-secondary);
-            font-weight: bold;
-        }
-
-        .disclaimer {
-            font-size: 0.8rem;
-            color: #666;
-            margin-top: 30px;
-            letter-spacing: 3px;
-        }
-
-        #loading {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            color: #333;
-            font-size: 0.7rem;
-        }
-    </style>
-
-    <!-- Three.js Import Map -->
-    <script type="importmap">
-        {
-            "imports": {
-                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
-            }
-        }
-    </script>
+    <title>ORACLE.EXE</title>
+    <meta name="description" content="The Oracle of Delphi lives inside an old computer. Ask her anything.">
+    <meta name="theme-color" content="#9fcfe8">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
+    <!-- ============ BOOT ============ -->
+    <div class="boot" id="boot" aria-live="polite">
+        <pre class="boot-log" id="bootLog"></pre>
+        <p class="boot-hint" id="bootHint">press any key to enter the temple</p>
+    </div>
 
-    <div id="ui-layer">
-        <div id="text-container">
-            <div class="phrase">Reality is a frequency.</div>
-            <div class="phrase">The void stares back.</div>
-            <div class="phrase">Static thoughts in a fluid mind.</div>
-            <div class="phrase">Entropy is beautiful chaos.</div>
-            <div class="phrase">We are just light and noise.</div>
+    <!-- ============ DESKTOP ============ -->
+    <main class="desktop" id="desktop" aria-label="Oracle desktop">
+        <div class="sky" aria-hidden="true">
+            <div class="cloud c1"></div>
+            <div class="cloud c2"></div>
+            <div class="cloud c3"></div>
+            <svg class="sky-eye" viewBox="0 0 200 100">
+                <path class="lid" d="M5 50 Q100 -10 195 50 Q100 110 5 50Z" />
+                <g class="iris-group">
+                    <circle class="iris" cx="100" cy="50" r="26" />
+                    <circle class="pupil" cx="100" cy="50" r="11" />
+                    <circle class="glint" cx="92" cy="42" r="4" />
+                </g>
+                <rect class="blink" x="0" y="0" width="200" height="100" />
+            </svg>
+            <div class="columns">
+                <span></span><span></span><span></span><span></span>
+            </div>
         </div>
-        <div id="loading">...NEURAL LINK ESTABLISHED...</div>
-    </div>
 
-    <div id="start-overlay">
-        <div id="start-text">INITIALIZE SEQUENCE</div>
-        <div class="song-credit">entropy - kirxcy</div>
-        <div class="disclaimer">HEADPHONES REQUIRED // TWILIGHT STATE</div>
-    </div>
+        <p class="caption" id="caption">you were here when the smoke was still warm</p>
 
-    <script type="module">
-        import * as THREE from 'three';
-        import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
-        import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
-        import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
-        import { GlitchPass } from 'three/addons/postprocessing/GlitchPass.js';
-        import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+        <!-- desktop icons -->
+        <nav class="icons" aria-label="Desktop icons">
+            <button class="icon" data-open="oracle">
+                <svg viewBox="0 0 32 32" aria-hidden="true">
+                    <rect x="3" y="5" width="26" height="19" fill="#1d2b5a" stroke="#000" />
+                    <rect x="5" y="7" width="22" height="15" fill="#0b0f20" />
+                    <path d="M16 9c2 2 2 5 0 7-2-2-2-5 0-7z" fill="#ffd36b" />
+                    <rect x="12" y="24" width="8" height="3" fill="#bdbdbd" stroke="#000" />
+                    <rect x="8" y="27" width="16" height="2" fill="#bdbdbd" stroke="#000" />
+                </svg>
+                <span>ORACLE.EXE</span>
+            </button>
+            <button class="icon" data-open="note">
+                <svg viewBox="0 0 32 32" aria-hidden="true">
+                    <path d="M7 3h13l5 5v21H7z" fill="#fff" stroke="#000" />
+                    <path d="M20 3v5h5" fill="#ddd" stroke="#000" />
+                    <path d="M10 13h12M10 17h12M10 21h8" stroke="#555" />
+                </svg>
+                <span>do_not_open.txt</span>
+            </button>
+            <button class="icon" data-open="offerings">
+                <svg viewBox="0 0 32 32" aria-hidden="true">
+                    <path d="M3 8h10l3 3h13v16H3z" fill="#f2cf5b" stroke="#000" />
+                    <path d="M3 13h26" stroke="#b8902a" />
+                </svg>
+                <span>offerings</span>
+            </button>
+            <button class="icon" data-open="bin">
+                <svg viewBox="0 0 32 32" aria-hidden="true">
+                    <path d="M8 9h16l-2 19H10z" fill="#d9d9d9" stroke="#000" />
+                    <path d="M6 9h20M13 6h6v3h-6z" stroke="#000" fill="#d9d9d9" />
+                    <path d="M13 13v11M16 13v11M19 13v11" stroke="#777" />
+                </svg>
+                <span>Recycle Bin (full)</span>
+            </button>
+        </nav>
 
-        // --- CONFIG ---
-        const AUDIO_PATH = 'entropy.mp3';
+        <!-- ORACLE window -->
+        <section class="win win--oracle" id="win-oracle" data-win="oracle" aria-label="Oracle">
+            <header class="win-bar">
+                <span class="win-title">
+                    <svg viewBox="0 0 16 16" aria-hidden="true">
+                        <path d="M8 2c2 2 2 5 0 8-2-3-2-6 0-8z" fill="#ffd36b" />
+                    </svg>
+                    ORACLE.EXE — Delphi
+                </span>
+                <span class="win-btns" aria-hidden="true"><i>_</i><i>□</i><i data-close>×</i></span>
+            </header>
+            <div class="win-menu" aria-hidden="true"><span>File</span><span>Smoke</span><span>Fate</span><span>Help</span></div>
+            <div class="screen" id="screen">
+                <div class="screen-head">
+                    <svg class="eye" id="eye" viewBox="0 0 60 30" aria-hidden="true">
+                        <path class="lid" d="M2 15 Q30 -4 58 15 Q30 34 2 15Z" />
+                        <circle class="iris" cx="30" cy="15" r="8" />
+                        <circle class="pupil" cx="30" cy="15" r="3.5" />
+                    </svg>
+                    <p>PYTHIA v.∞ — ask anything. ask the same thing twice and the smoke will remember.</p>
+                </div>
+                <div class="log" id="log" aria-live="polite"></div>
+                <form class="prompt" id="prompt" autocomplete="off">
+                    <label for="ask">C:\DELPHI&gt;</label>
+                    <input id="ask" name="ask" type="text" maxlength="140" spellcheck="false"
+                        placeholder="ask anything…" aria-label="Ask the oracle a question">
+                </form>
+            </div>
+            <footer class="win-status">
+                <span id="status">smoke: rising</span>
+                <span id="visits">visit 1</span>
+            </footer>
+        </section>
 
-        // --- SCENE SETUP ---
-        const scene = new THREE.Scene();
-        scene.fog = new THREE.FogExp2(0x050510, 0.025); // Twilight Fog (Dark Blue-ish)
+        <!-- NOTE window -->
+        <section class="win win--note" id="win-note" data-win="note" hidden aria-label="do_not_open.txt">
+            <header class="win-bar">
+                <span class="win-title">do_not_open.txt — Notepad</span>
+                <span class="win-btns"><i>_</i><i>□</i><i data-close>×</i></span>
+            </header>
+            <div class="note-body">
+                <p>you opened it.</p>
+                <p>three things were carved above the door of the temple at Delphi:</p>
+                <p><b>ΓΝΩΘΙ ΣΕΑΥΤΟΝ</b> — know yourself<br>
+                    <b>ΜΗΔΕΝ ΑΓΑΝ</b> — nothing too much<br>
+                    <b>ΕΓΓΥΑ ΠΑΡΑ Δ ΑΤΗ</b> — make a promise and ruin is near</p>
+                <p>the priestess sat on a three-legged stool over a crack in the earth. sweet smoke came up out
+                    of it. people travelled for weeks to ask her one question.</p>
+                <p>she never said exactly what would happen. she said something true that you could only
+                    understand later.</p>
+                <p>this computer is the crack in the earth now.</p>
+                <p class="dim">// don't tell it you read this</p>
+            </div>
+        </section>
 
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.z = 6;
+        <!-- OFFERINGS window -->
+        <section class="win win--offer" id="win-offerings" data-win="offerings" hidden aria-label="offerings">
+            <header class="win-bar">
+                <span class="win-title">C:\DELPHI\offerings</span>
+                <span class="win-btns"><i>_</i><i>□</i><i data-close>×</i></span>
+            </header>
+            <div class="offer-body">
+                <p>leave something for Apollo. he notices.</p>
+                <div class="offer-grid">
+                    <button data-offer="olive">🫒<span>olive</span></button>
+                    <button data-offer="laurel">🌿<span>laurel</span></button>
+                    <button data-offer="coin">🪙<span>coin</span></button>
+                    <button data-offer="honey">🍯<span>honey</span></button>
+                </div>
+                <p class="offer-count" id="offerCount">the altar is empty.</p>
+            </div>
+        </section>
 
-        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(window.devicePixelRatio);
-        renderer.toneMapping = THREE.ReinhardToneMapping;
-        document.body.appendChild(renderer.domElement);
+        <!-- BIN window -->
+        <section class="win win--bin" id="win-bin" data-win="bin" hidden aria-label="Recycle Bin">
+            <header class="win-bar">
+                <span class="win-title">Recycle Bin</span>
+                <span class="win-btns"><i>_</i><i>□</i><i data-close>×</i></span>
+            </header>
+            <ul class="bin-body">
+                <li>📄 icarus_flight_plan_FINAL_v2.doc</li>
+                <li>📄 pandoras_box_contents.txt <em>(0 KB — empty except for one thing)</em></li>
+                <li>🖼️ medusa_selfie.jpg <em>(cannot preview — preview turned to stone)</em></li>
+                <li>📁 entropy (old)</li>
+                <li>📄 sisyphus_todo.txt <em>— 1. push rock</em></li>
+            </ul>
+        </section>
 
-        // --- OBJECTS ---
+        <!-- taskbar -->
+        <footer class="taskbar">
+            <button class="start" id="startBtn" aria-haspopup="true" aria-expanded="false">
+                <b>Ω</b> start
+            </button>
+            <div class="start-menu" id="startMenu" hidden>
+                <p class="start-side">DELPHI 98</p>
+                <ul>
+                    <li><button data-open="oracle">🔥 Ask the Oracle</button></li>
+                    <li><button data-open="note">📄 do_not_open.txt</button></li>
+                    <li><button data-open="offerings">🫒 Leave an offering</button></li>
+                    <li><a href="https://undmg.github.io/">🏛️ Back to undmg.github.io</a></li>
+                    <li><button id="shutdown">⏻ Shut down…</button></li>
+                </ul>
+            </div>
+            <span class="task-item">ORACLE.EXE</span>
+            <span class="tray">
+                <button class="sound" id="soundBtn" aria-pressed="false" title="Temple hum">🔇</button>
+                <span id="clock">--:-- · 480 BC</span>
+            </span>
+        </footer>
 
-        // 1. The Core (Smooth Sphere)
-        const geometry = new THREE.SphereGeometry(1.5, 128, 128);
-        const material = new THREE.MeshStandardMaterial({
-            color: 0x120a2e, // Dark Deep Purple/Blue
-            wireframe: true,
-            emissive: 0x00ff88, // Greenish emission base
-            emissiveIntensity: 0.3, // Slight bump
-            roughness: 0.2,
-            metalness: 0.8,
-            flatShading: false
-        });
-        const core = new THREE.Mesh(geometry, material);
-        scene.add(core);
+        <!-- weirdcore pop-up -->
+        <div class="popup" id="popup" hidden role="alertdialog" aria-labelledby="popupText">
+            <div class="win popup-win">
+                <header class="win-bar"><span class="win-title">Delphi</span></header>
+                <div class="popup-body">
+                    <span class="popup-icon" aria-hidden="true">👁</span>
+                    <p id="popupText">are you still there?</p>
+                </div>
+                <div class="popup-btns">
+                    <button data-dismiss>yes</button>
+                    <button data-dismiss>yes</button>
+                </div>
+            </div>
+        </div>
+    </main>
 
-        // Store original positions
-        const positionAttribute = geometry.getAttribute('position');
-        const originalPositions = Array.from(positionAttribute.array);
-
-        // 2. Saturn Ring
-        const ringGeo = new THREE.RingGeometry(2.5, 3.2, 128);
-        const ringMat = new THREE.MeshBasicMaterial({
-            color: 0x5000ff, // Indigo/Purple
-            wireframe: true,
-            side: THREE.DoubleSide,
-            transparent: true,
-            opacity: 0.6
-        });
-        const ring = new THREE.Mesh(ringGeo, ringMat);
-        ring.rotation.x = Math.PI / 2.3; // Tilted
-        scene.add(ring);
-
-        // 3. Particle Field (Twilight Dust: Green/Blue/Purple)
-        const particlesGeometry = new THREE.BufferGeometry();
-        const particlesCount = 4000;
-        const posArray = new Float32Array(particlesCount * 3);
-        const colorArray = new Float32Array(particlesCount * 3);
-
-        const color1 = new THREE.Color(0x00ffaa); // Green/Cyan
-        const color2 = new THREE.Color(0x5500ff); // Purple
-
-        for (let i = 0; i < particlesCount * 3; i += 3) {
-            posArray[i] = (Math.random() - 0.5) * 60;
-            posArray[i + 1] = (Math.random() - 0.5) * 60;
-            posArray[i + 2] = (Math.random() - 0.5) * 60;
-
-            const mixedColor = color1.clone().lerp(color2, Math.random());
-            colorArray[i] = mixedColor.r;
-            colorArray[i + 1] = mixedColor.g;
-            colorArray[i + 2] = mixedColor.b;
-        }
-
-        particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
-        particlesGeometry.setAttribute('color', new THREE.BufferAttribute(colorArray, 3));
-
-        const particlesMaterial = new THREE.PointsMaterial({
-            size: 0.04,
-            vertexColors: true,
-            transparent: true,
-            opacity: 0.6,
-            blending: THREE.AdditiveBlending
-        });
-        const particleMesh = new THREE.Points(particlesGeometry, particlesMaterial);
-        scene.add(particleMesh);
-
-        // 4. Lights (Green + Purple Mix)
-        const pointLight = new THREE.PointLight(0x00ff88, 1.5); // Green/Cyan
-        pointLight.position.set(5, 5, 5);
-        scene.add(pointLight);
-
-        const pointLight2 = new THREE.PointLight(0x8b00ff, 1.5); // Purple
-        pointLight2.position.set(-5, -3, -5);
-        scene.add(pointLight2);
-
-        // --- POST PROCESSING ---
-        const composer = new EffectComposer(renderer);
-
-        const renderPass = new RenderPass(scene, camera);
-        composer.addPass(renderPass);
-
-        const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
-        bloomPass.threshold = 0.1; // Restored sensitivity
-        bloomPass.strength = 0.4; // Controlled intensity (approx 75% less than max)
-        bloomPass.radius = 0.5;
-        composer.addPass(bloomPass);
-
-        const glitchPass = new GlitchPass();
-        glitchPass.goWild = false;
-        glitchPass.enabled = false;
-        composer.addPass(glitchPass);
-
-        const outputPass = new OutputPass();
-        composer.addPass(outputPass);
-
-        // --- AUDIO SYSTEM ---
-        let audioContext, analyser, source, dataArray;
-        let audioElement;
-        let isSimulation = false;
-        let isPlaying = false;
-
-        function initAudio() {
-            if (isPlaying) return;
-
-            audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            audioElement = new Audio(AUDIO_PATH);
-            audioElement.loop = true;
-
-            try {
-                source = audioContext.createMediaElementSource(audioElement);
-                analyser = audioContext.createAnalyser();
-                analyser.fftSize = 512;
-                source.connect(analyser);
-                analyser.connect(audioContext.destination);
-
-                const bufferLength = analyser.frequencyBinCount;
-                dataArray = new Uint8Array(bufferLength);
-                isSimulation = false;
-            } catch (e) {
-                console.warn("CORS Restricted. Simulation Mode Engaged.");
-                isSimulation = true;
-                dataArray = null;
-            }
-
-            audioElement.play().then(() => {
-                isPlaying = true;
-                document.getElementById('start-overlay').style.opacity = '0';
-                setTimeout(() => document.getElementById('start-overlay').remove(), 1000);
-                animate();
-                cycleText();
-            }).catch(e => console.error(e));
-        }
-
-        // --- ANIMATION PIPELINE ---
-
-        let time = 0;
-
-        function animate() {
-            requestAnimationFrame(animate);
-            time += 0.003; // Slow base speed
-
-            // Audio Analysis
-            let bass = 0, mid = 0, high = 0;
-
-            if (!isSimulation && analyser && dataArray) {
-                analyser.getByteFrequencyData(dataArray);
-                bass = dataArray.slice(0, 10).reduce((a, b) => a + b, 0) / 10;
-                mid = dataArray.slice(20, 100).reduce((a, b) => a + b, 0) / 80;
-                high = dataArray.slice(100, 200).reduce((a, b) => a + b, 0) / 100;
-            } else {
-                // Simulation
-                bass = (Math.sin(time * 3) * 0.5 + 0.5) * 120;
-                mid = 50 + Math.cos(time * 1.5) * 40;
-                high = (Math.random() > 0.98) ? 150 : 0;
-            }
-
-            // Clean Noise Floor (Fixes "vibration at low volume")
-            const noiseFloor = 20;
-            const cleanBass = Math.max(0, bass - noiseFloor);
-            const bassNorm = cleanBass / (255 - noiseFloor);
-            const midNorm = mid / 255;
-            const highNorm = high / 255;
-
-            // 1. Spiky Core Deformation
-            const positions = geometry.getAttribute('position');
-            const count = positions.count;
-
-            for (let i = 0; i < count; i++) {
-                const ox = originalPositions[i * 3];
-                const oy = originalPositions[i * 3 + 1];
-                const oz = originalPositions[i * 3 + 2];
-
-                // "Spiky" Calculations
-                // Use a sharp power function on high frequency noise
-                const ang = Math.atan2(oy, ox);
-                const spikeNoise = Math.pow(Math.abs(Math.sin(ang * 10 + time)), 5) * Math.cos(oz * 4 + time);
-
-                // Base displacement + Spikes triggered by MID/HIGH frequencies
-                const displace = 1 + (spikeNoise * (midNorm * 0.6 + 0.1)) + (bassNorm * 0.2);
-
-                positions.setXYZ(i, ox * displace, oy * displace, oz * displace);
-            }
-            positions.needsUpdate = true;
-            geometry.computeVertexNormals();
-
-            // Core Rotation 
-            core.rotation.y += 0.002;
-            core.rotation.z -= 0.001;
-
-            // --- DYNAMIC COLOR CYCLING ---
-            // Sphere cycles through rainbow, Ring is always opposite
-            const sphereHue = (time * 0.1) % 1;
-            const ringHue = (sphereHue + 0.5) % 1;
-
-            // Update Sphere (Emissive) - Brightness reacts to Bass
-            core.material.emissive.setHSL(sphereHue, 0.9, 0.3 + bassNorm * 0.4);
-            core.material.color.setHSL(sphereHue, 0.8, 0.1);
-
-            // Update Ring (Color)
-            ring.material.color.setHSL(ringHue, 0.9, 0.6);
-
-            // 2. Saturn Ring Reaction
-            // Scale increases on bass/mid
-            const ringScale = 1 + (bassNorm * 0.25);
-            ring.scale.set(ringScale, ringScale, 1);
-
-            // Jitter/Rotate ring on high freq
-            ring.rotation.z += 0.002 + (highNorm * 0.02);
-            if (high > 220) {
-                ring.rotation.x = (Math.PI / 2.3) + (Math.random() * 0.1); // Jitter tilt
-            } else {
-                ring.rotation.x += ((Math.PI / 2.3) - ring.rotation.x) * 0.1; // Return to original tilt
-            }
-
-            // 3. Camera Movement (Smoothed & Reduced)
-            camera.position.x = Math.sin(time * 0.15) * 6;
-            camera.position.z = Math.cos(time * 0.15) * 6;
-            camera.position.y = Math.sin(time * 0.1) * 2;
-            camera.lookAt(0, 0, 0);
-
-            // Shake - FIXED: High threshold, low amplitude
-            if (bass > 245) { // Only on very strong hits
-                const shake = 0.05;
-                camera.position.x += (Math.random() - 0.5) * shake;
-                camera.position.y += (Math.random() - 0.5) * shake;
-            }
-
-            // 4. Particles
-            particleMesh.rotation.y -= 0.0005;
-
-            // 5. Glitch Effect (Rare)
-            glitchPass.enabled = (high > 240);
-
-            // Render
-            composer.render();
-        }
-
-        // --- RESIZE ---
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            composer.setSize(window.innerWidth, window.innerHeight);
-        });
-
-        // --- TEXT CYCLE ---
-        const phrases = document.querySelectorAll('.phrase');
-        let currentPhrase = 0;
-
-        function cycleText() {
-            phrases.forEach(p => p.classList.remove('active'));
-            phrases[currentPhrase].classList.add('active');
-            currentPhrase = (currentPhrase + 1) % phrases.length;
-            setTimeout(cycleText, 5000 + Math.random() * 3000);
-        }
-
-        // --- BIND START ---
-        document.getElementById('start-overlay').addEventListener('click', initAudio);
-
-    </script>
+    <div class="crt" aria-hidden="true"></div>
+    <script src="oracle.js"></script>
 </body>
 
 </html>
