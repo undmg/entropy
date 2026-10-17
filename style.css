@@ -161,25 +161,40 @@ button {
 .sky-eye {
     position: absolute;
     top: 5%;
-    right: 7%;
-    width: clamp(120px, 18vw, 240px);
-    opacity: 0.32;
+    right: 3%;
+    width: clamp(150px, 21vw, 290px);
+    opacity: 0.82;
+    overflow: visible;
+    filter: drop-shadow(0 0 22px rgba(255, 255, 255, 0.9)) drop-shadow(0 6px 18px rgba(60, 100, 150, 0.25));
+    animation: hover 7s ease-in-out infinite alternate;
 }
 
-.sky-eye .lid { fill: #fff; stroke: #2b3b55; stroke-width: 2; }
-.sky-eye .iris { fill: #4c7aa8; }
-.sky-eye .pupil { fill: #0b0f20; }
-.sky-eye .glint { fill: #fff; }
-.sky-eye .blink {
-    fill: var(--sky-top);
+@keyframes hover {
+    from { translate: 0 -6px; rotate: -2deg; }
+    to { translate: 0 8px; rotate: 2deg; }
+}
+
+/* shared eye parts (built in oracle.js) */
+.eye-ball {
+    transform-box: fill-box;
     transform-origin: 50% 50%;
-    transform: scaleY(0);
-    animation: skyBlink 9s infinite;
+    transition: transform 0.07s ease-in;
 }
 
-@keyframes skyBlink {
-    0%, 92%, 100% { transform: scaleY(0); }
-    95% { transform: scaleY(1); }
+.blinking .eye-ball {
+    transform: scaleY(0.06);
+}
+
+.eye-look {
+    transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.eye-pupil {
+    transition: r 0.45s ease;
+}
+
+.eye-pglow {
+    transition: opacity 0.4s ease, r 0.45s ease;
 }
 
 .columns {
@@ -406,18 +421,20 @@ button {
 
 .eye {
     flex: none;
-    width: 52px;
-    height: 26px;
+    width: 92px;
+    height: 56px;
+    overflow: visible;
+    filter: drop-shadow(0 0 6px rgba(255, 196, 80, 0.45));
+    transition: filter 0.4s ease;
 }
 
-.eye .lid { fill: #f3efe6; stroke: var(--phosphor); stroke-width: 1.5; }
-.eye .iris { fill: var(--blood); }
-.eye .pupil { fill: #000; }
-.eye.blink .lid,
-.eye.blink .iris,
-.eye.blink .pupil {
-    transform: scaleY(0.08);
-    transform-origin: 50% 50%;
+.eye.awake {
+    filter: drop-shadow(0 0 10px rgba(255, 196, 80, 0.85)) drop-shadow(0 0 22px rgba(179, 22, 27, 0.7));
+}
+
+.eye.awake .eye-pglow {
+    opacity: 1;
+    r: 20;
 }
 
 .log {
@@ -840,17 +857,21 @@ button {
     }
 
     .sky-eye {
-        width: 42vw;
+        width: 46vw;
         top: auto;
         bottom: 60px;
-        right: 8%;
+        right: 6%;
+    }
+
+    .eye {
+        width: 70px;
+        height: 42px;
     }
 }
 
 @media (prefers-reduced-motion: reduce) {
     .crt,
     .cloud,
-    .sky-eye .blink,
     .screen::before,
     .boot-hint {
         animation: none;

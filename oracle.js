@@ -209,29 +209,176 @@
         $('#caption').textContent = CAPTIONS[capI];
     }, 11000);
 
-    // eyes follow the pointer
+    // ---------- the eyes ----------
+    // Both eyes are drawn here as layered SVG: shaded white, fibrous iris, rim, pupil,
+    // wet highlights, lids and lashes. Each has its own colour theme.
+    const EYE_THEMES = {
+        sky: {
+            sclera: ['#ffffff', '#eef1f6', '#b7c4d6'],
+            iris: ['#e6f6ff', '#8cc4ec', '#3a6fae', '#132a52'],
+            fibre: '#f2fbff', rim: '#0d1d3a', lid: '#2c3d5c', lash: '#1d2a44',
+            veins: null, pupilGlow: null,
+        },
+        oracle: {
+            sclera: ['#fbf3e6', '#eadac4', '#9c8170'],
+            iris: ['#fff0a8', '#f2a531', '#b3161b', '#2a0304'],
+            fibre: '#ffe39a', rim: '#120102', lid: '#ffd36b', lash: '#ffd36b',
+            veins: '#c3262c', pupilGlow: '#ffcf6b',
+        },
+    };
+    const NS = 'http://www.w3.org/2000/svg';
+    const ALMOND = 'M8 60 C52 4 148 4 192 60 C148 112 52 112 8 60Z';
+
+    function bez(t, p0, p1, p2, p3) {
+        const u = 1 - t;
+        return u * u * u * p0 + 3 * u * u * t * p1 + 3 * u * t * t * p2 + t * t * t * p3;
+    }
+    function bezD(t, p0, p1, p2, p3) {
+        const u = 1 - t;
+        return 3 * u * u * (p1 - p0) + 6 * u * t * (p2 - p1) + 3 * t * t * (p3 - p2);
+    }
+
+    function buildEye(svg, themeName) {
+        const t = EYE_THEMES[themeName];
+        const id = 'eye-' + themeName;
+        const R = rng(hash(id));
+        svg.setAttribute('viewBox', '0 0 200 120');
+
+        // iris fibres: thin radial strokes of varying length and brightness
+        let fibres = '';
+        for (let i = 0; i < 64; i++) {
+            const a = (i / 64) * Math.PI * 2 + R() * 0.05;
+            const r0 = 13 + R() * 3, r1 = 24 + R() * 8;
+            const x0 = 100 + Math.cos(a) * r0, y0 = 60 + Math.sin(a) * r0;
+            const x1 = 100 + Math.cos(a) * r1, y1 = 60 + Math.sin(a) * r1;
+            fibres += `<path d="M${x0.toFixed(1)} ${y0.toFixed(1)} L${x1.toFixed(1)} ${y1.toFixed(1)}" stroke="${t.fibre}" stroke-opacity="${(0.15 + R() * 0.35).toFixed(2)}" stroke-width="${(0.5 + R() * 0.9).toFixed(2)}"/>`;
+        }
+        // a darker crypt ring halfway out
+        fibres += `<circle cx="100" cy="60" r="21" fill="none" stroke="${t.rim}" stroke-opacity="0.25" stroke-width="1.2" stroke-dasharray="2 3"/>`;
+
+        // veins creeping in from the corners (oracle only)
+        let veins = '';
+        if (t.veins) {
+            const vein = (x, y, dir) => {
+                let d = `M${x} ${y}`, cx = x, cy = y;
+                for (let k = 0; k < 4; k++) {
+                    cx += dir * (6 + R() * 7);
+                    cy += (R() - 0.5) * 9;
+                    d += ` Q${(cx - dir * 3).toFixed(1)} ${(cy + (R() - 0.5) * 6).toFixed(1)} ${cx.toFixed(1)} ${cy.toFixed(1)}`;
+                }
+                return `<path d="${d}" fill="none" stroke="${t.veins}" stroke-opacity="0.55" stroke-width="${(0.5 + R() * 0.6).toFixed(2)}" stroke-linecap="round"/>`;
+            };
+            for (let k = 0; k < 4; k++) veins += vein(12 + R() * 6, 52 + R() * 16, 1) + vein(188 - R() * 6, 52 + R() * 16, -1);
+        }
+
+        // lashes along the upper lid, longest in the middle, curling outward
+        let lashes = '';
+        const N = 17;
+        for (let i = 1; i < N; i++) {
+            const tt = i / N;
+            const x = bez(tt, 8, 52, 148, 192), y = bez(tt, 60, 4, 4, 60);
+            const dx = bezD(tt, 8, 52, 148, 192), dy = bezD(tt, 60, 4, 4, 60);
+            const len = Math.hypot(dx, dy);
+            let nx = dy / len, ny = -dx / len;
+            if (ny > 0) { nx = -nx; ny = -ny; }
+            const L = 6 + Math.sin(tt * Math.PI) * 10;
+            const side = tt < 0.5 ? -1 : 1;
+            const ex = x + nx * L + side * L * 0.35, ey = y + ny * L;
+            const qx = x + nx * L * 0.6, qy = y + ny * L * 0.6;
+            lashes += `<path d="M${x.toFixed(1)} ${y.toFixed(1)} Q${qx.toFixed(1)} ${qy.toFixed(1)} ${ex.toFixed(1)} ${ey.toFixed(1)}" stroke="${t.lash}" stroke-width="${(1.4 + Math.sin(tt * Math.PI)).toFixed(2)}" stroke-linecap="round" fill="none"/>`;
+        }
+
+        svg.innerHTML = `
+            <defs>
+                <radialGradient id="${id}-sclera" cx="50%" cy="55%" r="60%">
+                    <stop offset="0" stop-color="${t.sclera[0]}"/>
+                    <stop offset="0.6" stop-color="${t.sclera[1]}"/>
+                    <stop offset="1" stop-color="${t.sclera[2]}"/>
+                </radialGradient>
+                <radialGradient id="${id}-iris" cx="50%" cy="50%" r="50%">
+                    <stop offset="0" stop-color="${t.iris[0]}"/>
+                    <stop offset="0.38" stop-color="${t.iris[1]}"/>
+                    <stop offset="0.78" stop-color="${t.iris[2]}"/>
+                    <stop offset="1" stop-color="${t.iris[3]}"/>
+                </radialGradient>
+                <linearGradient id="${id}-shade" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0" stop-color="#000" stop-opacity="0.55"/>
+                    <stop offset="0.38" stop-color="#000" stop-opacity="0"/>
+                    <stop offset="0.85" stop-color="#000" stop-opacity="0"/>
+                    <stop offset="1" stop-color="#000" stop-opacity="0.25"/>
+                </linearGradient>
+                <radialGradient id="${id}-pupil" cx="50%" cy="50%" r="50%">
+                    <stop offset="0.7" stop-color="#000"/>
+                    <stop offset="1" stop-color="#000" stop-opacity="0.6"/>
+                </radialGradient>
+                <clipPath id="${id}-clip"><path d="${ALMOND}"/></clipPath>
+                <filter id="${id}-soft" x="-20%" y="-20%" width="140%" height="140%">
+                    <feGaussianBlur stdDeviation="1.2"/>
+                </filter>
+            </defs>
+            <path class="eye-crease" d="M26 40 C66 -4 134 -4 174 40" fill="none" stroke="${t.lid}" stroke-opacity="0.35" stroke-width="1.6" stroke-linecap="round"/>
+            <g class="eye-ball">
+                <g clip-path="url(#${id}-clip)">
+                    <path d="${ALMOND}" fill="url(#${id}-sclera)"/>
+                    ${veins}
+                    <g class="eye-look">
+                        <circle cx="100" cy="60" r="33" fill="${t.rim}" opacity="0.35" filter="url(#${id}-soft)"/>
+                        <circle cx="100" cy="60" r="31" fill="url(#${id}-iris)"/>
+                        <g>${fibres}</g>
+                        <circle cx="100" cy="60" r="30.5" fill="none" stroke="${t.rim}" stroke-width="3.2" opacity="0.85"/>
+                        ${t.pupilGlow ? `<circle class="eye-pglow" cx="100" cy="60" r="15" fill="none" stroke="${t.pupilGlow}" stroke-width="2" opacity="0.45" filter="url(#${id}-soft)"/>` : ''}
+                        <circle class="eye-pupil" cx="100" cy="60" r="11.5" fill="url(#${id}-pupil)"/>
+                    </g>
+                    <path d="${ALMOND}" fill="url(#${id}-shade)"/>
+                    <ellipse cx="86" cy="45" rx="7" ry="4.5" fill="#fff" opacity="0.92" transform="rotate(-20 86 45)"/>
+                    <circle cx="115" cy="72" r="2.2" fill="#fff" opacity="0.55"/>
+                    <path d="M40 92 C80 106 120 106 160 92" fill="none" stroke="#fff" stroke-opacity="0.35" stroke-width="1.2"/>
+                </g>
+                <path d="M8 60 C52 4 148 4 192 60" fill="none" stroke="${t.lid}" stroke-width="3.6" stroke-linecap="round"/>
+                <path d="M8 60 C52 112 148 112 192 60" fill="none" stroke="${t.lid}" stroke-width="1.4" stroke-opacity="0.7" stroke-linecap="round"/>
+                <circle cx="13" cy="60" r="3" fill="${t.veins || '#e7a9a9'}" opacity="0.55"/>
+                ${lashes}
+            </g>`;
+        return svg;
+    }
+
+    const eyes = $$('[data-eye]').map(svg => buildEye(svg, svg.dataset.eye));
     const eye = $('#eye');
-    const skyEye = $('.sky-eye .iris-group');
+
+    // look at the pointer; pupils shrink a little when the pointer gets close
     window.addEventListener('pointermove', e => {
-        [[eye, 4, ['.iris', '.pupil']], [skyEye, 14, null]].forEach(([el, max, parts]) => {
-            if (!el) return;
-            const svg = el.ownerSVGElement || el;
+        eyes.forEach(svg => {
             const r = svg.getBoundingClientRect();
+            if (!r.width) return;
             const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
             const a = Math.atan2(e.clientY - cy, e.clientX - cx);
-            const d = Math.min(1, Math.hypot(e.clientX - cx, e.clientY - cy) / 300);
-            const tx = Math.cos(a) * max * d, ty = Math.sin(a) * max * d * 0.6;
-            const targets = parts ? parts.map(p => el.querySelector(p)) : [el];
-            targets.forEach(t => t.setAttribute('transform', `translate(${tx.toFixed(1)} ${ty.toFixed(1)})`));
+            const dist = Math.hypot(e.clientX - cx, e.clientY - cy);
+            const d = Math.min(1, dist / 260);
+            const tx = Math.cos(a) * 16 * d, ty = Math.sin(a) * 9 * d;
+            svg.querySelector('.eye-look').setAttribute('transform', `translate(${tx.toFixed(1)} ${ty.toFixed(1)})`);
+            if (!svg.classList.contains('awake')) {
+                svg.querySelector('.eye-pupil').style.r = (8.5 + Math.min(1, dist / 400) * 4).toFixed(1);
+            }
         });
     });
-    (function blinkLoop() {
+
+    function blink(svg) {
+        svg.classList.add('blinking');
+        setTimeout(() => svg.classList.remove('blinking'), 150);
+    }
+    eyes.forEach(svg => (function loop() {
         setTimeout(() => {
-            eye.classList.add('blink');
-            setTimeout(() => eye.classList.remove('blink'), 140);
-            blinkLoop();
-        }, 2500 + Math.random() * 5000);
-    })();
+            blink(svg);
+            if (Math.random() < 0.25) setTimeout(() => blink(svg), 260);   // sometimes a double blink
+            loop();
+        }, 2600 + Math.random() * 5200);
+    })());
+
+    // the oracle's eye wakes up (pupil blows wide, glow brightens) while she speaks
+    function eyeAwake(on) {
+        eye.classList.toggle('awake', on);
+        eye.querySelector('.eye-pupil').style.r = on ? '17' : '11.5';
+    }
 
     // ---------- pop-ups ----------
     const pop = $('#popup');
@@ -489,6 +636,7 @@
         asked[key] = true;
         store.set('asked', asked);
 
+        eyeAwake(true);
         await consult();
         const { omen, lines } = prophecy(q);
         await sleep(250);
@@ -504,6 +652,7 @@
         if (Math.random() < 0.18) setTimeout(() => popup('did you understand it?'), 1400);
 
         $('#status').textContent = 'smoke: settling';
+        eyeAwake(false);
         busy = false;
         input.disabled = false;
         input.focus({ preventScroll: true });

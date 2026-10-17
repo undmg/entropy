@@ -26,15 +26,7 @@
             <div class="cloud c1"></div>
             <div class="cloud c2"></div>
             <div class="cloud c3"></div>
-            <svg class="sky-eye" viewBox="0 0 200 100">
-                <path class="lid" d="M5 50 Q100 -10 195 50 Q100 110 5 50Z" />
-                <g class="iris-group">
-                    <circle class="iris" cx="100" cy="50" r="26" />
-                    <circle class="pupil" cx="100" cy="50" r="11" />
-                    <circle class="glint" cx="92" cy="42" r="4" />
-                </g>
-                <rect class="blink" x="0" y="0" width="200" height="100" />
-            </svg>
+            <svg class="sky-eye" data-eye="sky" aria-hidden="true"></svg>
             <div class="columns">
                 <span></span><span></span><span></span><span></span>
             </div>
@@ -93,11 +85,7 @@
             <div class="win-menu" aria-hidden="true"><span>File</span><span>Smoke</span><span>Fate</span><span>Help</span></div>
             <div class="screen" id="screen">
                 <div class="screen-head">
-                    <svg class="eye" id="eye" viewBox="0 0 60 30" aria-hidden="true">
-                        <path class="lid" d="M2 15 Q30 -4 58 15 Q30 34 2 15Z" />
-                        <circle class="iris" cx="30" cy="15" r="8" />
-                        <circle class="pupil" cx="30" cy="15" r="3.5" />
-                    </svg>
+                    <svg class="eye" id="eye" data-eye="oracle" aria-hidden="true"></svg>
                     <p>PYTHIA v.∞ — ask anything. ask the same thing twice and the smoke will remember.</p>
                 </div>
                 <div class="log" id="log" aria-live="polite"></div>
