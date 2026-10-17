@@ -210,24 +210,26 @@
     }, 11000);
 
     // ---------- the eyes ----------
-    // Both eyes are drawn here as layered SVG: shaded white, fibrous iris, rim, pupil,
-    // wet highlights, lids and lashes. Each has its own colour theme.
+    // Realistic layered SVG eyes. The eyeball never scales: blinking and gazing move
+    // the eyelids themselves (the eye opening is redrawn every frame from lid curves).
     const EYE_THEMES = {
         sky: {
-            sclera: ['#ffffff', '#eef1f6', '#b7c4d6'],
-            iris: ['#e6f6ff', '#8cc4ec', '#3a6fae', '#132a52'],
-            fibre: '#f2fbff', rim: '#0d1d3a', lid: '#2c3d5c', lash: '#1d2a44',
-            veins: null, pupilGlow: null,
+            skin: ['#f4e4db', '#e3c4b6', '#c79d8f'], socket: '#6e463b', crease: '#8a5c4f',
+            lash: '#1b1210', lidEdge: '#3a2620', waterline: '#e6aea3',
+            sclera: ['#ffffff', '#f3eeec', '#c9bcba'], veins: '#c9484a', veinAlpha: 0.22,
+            iris: ['#d6ecf6', '#86b7da', '#3f72a3', '#1a3354'], fibreLight: '#eef8ff', fibreDark: '#16304f',
+            collar: '#d8b46a', rim: '#0b1628', noise: [0.55, 0.75, 0.95],
         },
         oracle: {
-            sclera: ['#fbf3e6', '#eadac4', '#9c8170'],
-            iris: ['#fff0a8', '#f2a531', '#b3161b', '#2a0304'],
-            fibre: '#ffe39a', rim: '#120102', lid: '#ffd36b', lash: '#ffd36b',
-            veins: '#c3262c', pupilGlow: '#ffcf6b',
+            skin: ['#f2d2ac', '#c78d60', '#5e3019'], socket: '#2e1209', crease: '#552613',
+            lash: '#140906', lidEdge: '#3a1a10', waterline: '#e59a86',
+            sclera: ['#fcf3e6', '#ecdac5', '#ab8a74'], veins: '#c3262c', veinAlpha: 0.5,
+            iris: ['#ffe8a3', '#e89b2f', '#a4241a', '#260405'], fibreLight: '#ffe9ad', fibreDark: '#4d0b08',
+            collar: '#ffd36b', rim: '#120101', noise: [1, 0.7, 0.35],
         },
     };
-    const NS = 'http://www.w3.org/2000/svg';
-    const ALMOND = 'M8 60 C52 4 148 4 192 60 C148 112 52 112 8 60Z';
+    const EYE = { cx: 100, cy: 60, irisR: 34, pupilR: 12 };
+    const lerp = (a, b, k) => a + (b - a) * k;
 
     function bez(t, p0, p1, p2, p3) {
         const u = 1 - t;
@@ -237,147 +239,306 @@
         const u = 1 - t;
         return 3 * u * u * (p1 - p0) + 6 * u * t * (p2 - p1) + 3 * t * t * (p3 - p2);
     }
+    const upperPath = c => `M8 60 C52 ${c.toFixed(2)} 148 ${c.toFixed(2)} 192 60`;
+    const lowerPath = d => `M8 60 C52 ${d.toFixed(2)} 148 ${d.toFixed(2)} 192 60`;
+    const openingPath = (c, d) => `M8 60 C52 ${c.toFixed(2)} 148 ${c.toFixed(2)} 192 60 C148 ${d.toFixed(2)} 52 ${d.toFixed(2)} 8 60Z`;
 
     function buildEye(svg, themeName) {
         const t = EYE_THEMES[themeName];
         const id = 'eye-' + themeName;
         const R = rng(hash(id));
-        svg.setAttribute('viewBox', '0 0 200 120');
+        const { cx, cy, irisR, pupilR } = EYE;
+        svg.setAttribute('viewBox', '-30 -40 260 200');
 
-        // iris fibres: thin radial strokes of varying length and brightness
+        // iris fibres: fine radial strands, light and dark, uneven lengths
         let fibres = '';
-        for (let i = 0; i < 64; i++) {
-            const a = (i / 64) * Math.PI * 2 + R() * 0.05;
-            const r0 = 13 + R() * 3, r1 = 24 + R() * 8;
-            const x0 = 100 + Math.cos(a) * r0, y0 = 60 + Math.sin(a) * r0;
-            const x1 = 100 + Math.cos(a) * r1, y1 = 60 + Math.sin(a) * r1;
-            fibres += `<path d="M${x0.toFixed(1)} ${y0.toFixed(1)} L${x1.toFixed(1)} ${y1.toFixed(1)}" stroke="${t.fibre}" stroke-opacity="${(0.15 + R() * 0.35).toFixed(2)}" stroke-width="${(0.5 + R() * 0.9).toFixed(2)}"/>`;
+        for (let i = 0; i < 150; i++) {
+            const a = (i / 150) * Math.PI * 2 + (R() - 0.5) * 0.04;
+            const r0 = pupilR + 1 + R() * 2.5, r1 = irisR * (0.7 + R() * 0.28);
+            const wob = (R() - 0.5) * 0.12;
+            const x0 = cx + Math.cos(a) * r0, y0 = cy + Math.sin(a) * r0;
+            const xm = cx + Math.cos(a + wob) * (r0 + r1) / 2, ym = cy + Math.sin(a + wob) * (r0 + r1) / 2;
+            const x1 = cx + Math.cos(a) * r1, y1 = cy + Math.sin(a) * r1;
+            const light = R() < 0.62;
+            fibres += `<path d="M${x0.toFixed(1)} ${y0.toFixed(1)} Q${xm.toFixed(1)} ${ym.toFixed(1)} ${x1.toFixed(1)} ${y1.toFixed(1)}" stroke="${light ? t.fibreLight : t.fibreDark}" stroke-opacity="${(light ? 0.12 + R() * 0.3 : 0.15 + R() * 0.3).toFixed(2)}" stroke-width="${(0.3 + R() * 0.55).toFixed(2)}" fill="none"/>`;
         }
-        // a darker crypt ring halfway out
-        fibres += `<circle cx="100" cy="60" r="21" fill="none" stroke="${t.rim}" stroke-opacity="0.25" stroke-width="1.2" stroke-dasharray="2 3"/>`;
-
-        // veins creeping in from the corners (oracle only)
+        // collarette: the wavy ring around the pupil
+        let collar = '';
+        for (let i = 0; i <= 48; i++) {
+            const a = (i / 48) * Math.PI * 2;
+            const r = pupilR + 5.5 + Math.sin(a * 7 + R()) * 1.3 + (R() - 0.5) * 1.2;
+            collar += `${i ? 'L' : 'M'}${(cx + Math.cos(a) * r).toFixed(1)} ${(cy + Math.sin(a) * r).toFixed(1)}`;
+        }
+        // crypts: little dark pits in the iris
+        let crypts = '';
+        for (let i = 0; i < 14; i++) {
+            const a = R() * Math.PI * 2, r = pupilR + 8 + R() * 12;
+            crypts += `<ellipse cx="${(cx + Math.cos(a) * r).toFixed(1)}" cy="${(cy + Math.sin(a) * r).toFixed(1)}" rx="${(0.8 + R() * 1.6).toFixed(1)}" ry="${(0.5 + R() * 0.8).toFixed(1)}" transform="rotate(${(a * 180 / Math.PI).toFixed(0)} ${(cx + Math.cos(a) * r).toFixed(1)} ${(cy + Math.sin(a) * r).toFixed(1)})" fill="${t.fibreDark}" opacity="${(0.25 + R() * 0.3).toFixed(2)}"/>`;
+        }
+        // veins on the white, branching in from both corners
         let veins = '';
-        if (t.veins) {
-            const vein = (x, y, dir) => {
-                let d = `M${x} ${y}`, cx = x, cy = y;
-                for (let k = 0; k < 4; k++) {
-                    cx += dir * (6 + R() * 7);
-                    cy += (R() - 0.5) * 9;
-                    d += ` Q${(cx - dir * 3).toFixed(1)} ${(cy + (R() - 0.5) * 6).toFixed(1)} ${cx.toFixed(1)} ${cy.toFixed(1)}`;
-                }
-                return `<path d="${d}" fill="none" stroke="${t.veins}" stroke-opacity="0.55" stroke-width="${(0.5 + R() * 0.6).toFixed(2)}" stroke-linecap="round"/>`;
-            };
-            for (let k = 0; k < 4; k++) veins += vein(12 + R() * 6, 52 + R() * 16, 1) + vein(188 - R() * 6, 52 + R() * 16, -1);
+        const vein = (x, y, dir, w) => {
+            let d = `M${x.toFixed(1)} ${y.toFixed(1)}`, px = x, py = y;
+            const steps = 3 + Math.floor(R() * 3);
+            for (let k = 0; k < steps; k++) {
+                const nx = px + dir * (5 + R() * 8), ny = py + (R() - 0.5) * 8;
+                d += ` Q${((px + nx) / 2 + (R() - 0.5) * 4).toFixed(1)} ${((py + ny) / 2 + (R() - 0.5) * 4).toFixed(1)} ${nx.toFixed(1)} ${ny.toFixed(1)}`;
+                if (R() < 0.35) veins += `<path d="M${nx.toFixed(1)} ${ny.toFixed(1)} q${(dir * (3 + R() * 4)).toFixed(1)} ${((R() - 0.5) * 7).toFixed(1)} ${(dir * (5 + R() * 5)).toFixed(1)} ${((R() - 0.5) * 9).toFixed(1)}" stroke="${t.veins}" stroke-width="${(w * 0.6).toFixed(2)}" fill="none" stroke-linecap="round"/>`;
+                px = nx; py = ny;
+            }
+            veins += `<path d="${d}" stroke="${t.veins}" stroke-width="${w.toFixed(2)}" fill="none" stroke-linecap="round"/>`;
+        };
+        for (let k = 0; k < 6; k++) {
+            vein(14 + R() * 8, 48 + R() * 24, 1, 0.35 + R() * 0.45);
+            vein(186 - R() * 8, 48 + R() * 24, -1, 0.35 + R() * 0.45);
         }
 
-        // lashes along the upper lid, longest in the middle, curling outward
-        let lashes = '';
-        const N = 17;
-        for (let i = 1; i < N; i++) {
-            const tt = i / N;
-            const x = bez(tt, 8, 52, 148, 192), y = bez(tt, 60, 4, 4, 60);
-            const dx = bezD(tt, 8, 52, 148, 192), dy = bezD(tt, 60, 4, 4, 60);
-            const len = Math.hypot(dx, dy);
-            let nx = dy / len, ny = -dx / len;
-            if (ny > 0) { nx = -nx; ny = -ny; }
-            const L = 6 + Math.sin(tt * Math.PI) * 10;
-            const side = tt < 0.5 ? -1 : 1;
-            const ex = x + nx * L + side * L * 0.35, ey = y + ny * L;
-            const qx = x + nx * L * 0.6, qy = y + ny * L * 0.6;
-            lashes += `<path d="M${x.toFixed(1)} ${y.toFixed(1)} Q${qx.toFixed(1)} ${qy.toFixed(1)} ${ex.toFixed(1)} ${ey.toFixed(1)}" stroke="${t.lash}" stroke-width="${(1.4 + Math.sin(tt * Math.PI)).toFixed(2)}" stroke-linecap="round" fill="none"/>`;
-        }
+        const lashCount = 58, lowerCount = 22;
+        let lashEls = '';
+        for (let i = 0; i < lashCount; i++) lashEls += `<path class="lash" stroke="${t.lash}" fill="none" stroke-linecap="round"/>`;
+        let lowerEls = '';
+        for (let i = 0; i < lowerCount; i++) lowerEls += `<path class="lash-low" stroke="${t.lash}" fill="none" stroke-linecap="round" opacity="0.75"/>`;
 
         svg.innerHTML = `
             <defs>
-                <radialGradient id="${id}-sclera" cx="50%" cy="55%" r="60%">
+                <radialGradient id="${id}-skin" cx="50%" cy="42%" r="55%">
+                    <stop offset="0" stop-color="${t.skin[0]}"/>
+                    <stop offset="0.55" stop-color="${t.skin[1]}"/>
+                    <stop offset="1" stop-color="${t.skin[2]}"/>
+                </radialGradient>
+                <radialGradient id="${id}-fade" cx="50%" cy="50%" r="50%">
+                    <stop offset="0.55" stop-color="#fff"/>
+                    <stop offset="1" stop-color="#000"/>
+                </radialGradient>
+                <mask id="${id}-mask" maskContentUnits="userSpaceOnUse">
+                    <ellipse cx="100" cy="58" rx="128" ry="96" fill="url(#${id}-fade)"/>
+                </mask>
+                <radialGradient id="${id}-sclera" cx="50%" cy="58%" r="58%">
                     <stop offset="0" stop-color="${t.sclera[0]}"/>
-                    <stop offset="0.6" stop-color="${t.sclera[1]}"/>
+                    <stop offset="0.55" stop-color="${t.sclera[1]}"/>
                     <stop offset="1" stop-color="${t.sclera[2]}"/>
                 </radialGradient>
                 <radialGradient id="${id}-iris" cx="50%" cy="50%" r="50%">
-                    <stop offset="0" stop-color="${t.iris[0]}"/>
-                    <stop offset="0.38" stop-color="${t.iris[1]}"/>
-                    <stop offset="0.78" stop-color="${t.iris[2]}"/>
+                    <stop offset="0.3" stop-color="${t.iris[0]}"/>
+                    <stop offset="0.5" stop-color="${t.iris[1]}"/>
+                    <stop offset="0.82" stop-color="${t.iris[2]}"/>
                     <stop offset="1" stop-color="${t.iris[3]}"/>
                 </radialGradient>
-                <linearGradient id="${id}-shade" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0" stop-color="#000" stop-opacity="0.55"/>
-                    <stop offset="0.38" stop-color="#000" stop-opacity="0"/>
-                    <stop offset="0.85" stop-color="#000" stop-opacity="0"/>
-                    <stop offset="1" stop-color="#000" stop-opacity="0.25"/>
-                </linearGradient>
-                <radialGradient id="${id}-pupil" cx="50%" cy="50%" r="50%">
-                    <stop offset="0.7" stop-color="#000"/>
-                    <stop offset="1" stop-color="#000" stop-opacity="0.6"/>
+                <radialGradient id="${id}-limbal" cx="50%" cy="50%" r="50%">
+                    <stop offset="0.8" stop-color="${t.rim}" stop-opacity="0"/>
+                    <stop offset="0.93" stop-color="${t.rim}" stop-opacity="0.75"/>
+                    <stop offset="1" stop-color="${t.rim}" stop-opacity="0.95"/>
                 </radialGradient>
-                <clipPath id="${id}-clip"><path d="${ALMOND}"/></clipPath>
-                <filter id="${id}-soft" x="-20%" y="-20%" width="140%" height="140%">
-                    <feGaussianBlur stdDeviation="1.2"/>
+                <radialGradient id="${id}-pupil" cx="50%" cy="50%" r="50%">
+                    <stop offset="0.82" stop-color="#030303"/>
+                    <stop offset="1" stop-color="#030303" stop-opacity="0"/>
+                </radialGradient>
+                <filter id="${id}-noise" x="0" y="0" width="100%" height="100%">
+                    <feTurbulence type="fractalNoise" baseFrequency="0.42" numOctaves="3" seed="${hash(id) % 97}"/>
+                    <feColorMatrix type="matrix" values="0 0 0 0 ${t.noise[0]}  0 0 0 0 ${t.noise[1]}  0 0 0 0 ${t.noise[2]}  1.1 0 0 0 -0.45"/>
+                    <feComposite in2="SourceGraphic" operator="in"/>
                 </filter>
+                <filter id="${id}-blur1" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="1"/></filter>
+                <filter id="${id}-blur4" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="4"/></filter>
+                <filter id="${id}-blur03"><feGaussianBlur stdDeviation="0.35"/></filter>
+                <clipPath id="${id}-clip"><path class="eye-clip"/></clipPath>
             </defs>
-            <path class="eye-crease" d="M26 40 C66 -4 134 -4 174 40" fill="none" stroke="${t.lid}" stroke-opacity="0.35" stroke-width="1.6" stroke-linecap="round"/>
-            <g class="eye-ball">
-                <g clip-path="url(#${id}-clip)">
-                    <path d="${ALMOND}" fill="url(#${id}-sclera)"/>
-                    ${veins}
-                    <g class="eye-look">
-                        <circle cx="100" cy="60" r="33" fill="${t.rim}" opacity="0.35" filter="url(#${id}-soft)"/>
-                        <circle cx="100" cy="60" r="31" fill="url(#${id}-iris)"/>
-                        <g>${fibres}</g>
-                        <circle cx="100" cy="60" r="30.5" fill="none" stroke="${t.rim}" stroke-width="3.2" opacity="0.85"/>
-                        ${t.pupilGlow ? `<circle class="eye-pglow" cx="100" cy="60" r="15" fill="none" stroke="${t.pupilGlow}" stroke-width="2" opacity="0.45" filter="url(#${id}-soft)"/>` : ''}
-                        <circle class="eye-pupil" cx="100" cy="60" r="11.5" fill="url(#${id}-pupil)"/>
-                    </g>
-                    <path d="${ALMOND}" fill="url(#${id}-shade)"/>
-                    <ellipse cx="86" cy="45" rx="7" ry="4.5" fill="#fff" opacity="0.92" transform="rotate(-20 86 45)"/>
-                    <circle cx="115" cy="72" r="2.2" fill="#fff" opacity="0.55"/>
-                    <path d="M40 92 C80 106 120 106 160 92" fill="none" stroke="#fff" stroke-opacity="0.35" stroke-width="1.2"/>
+
+            <!-- skin around the eye, fading out into the background -->
+            <g mask="url(#${id}-mask)">
+                <ellipse cx="100" cy="58" rx="128" ry="96" fill="url(#${id}-skin)"/>
+                <ellipse cx="100" cy="-6" rx="86" ry="22" fill="#fff" opacity="0.22" filter="url(#${id}-blur4)"/>
+                <path class="eye-socket" fill="none" stroke="${t.socket}" stroke-width="12" opacity="0.38" filter="url(#${id}-blur4)"/>
+                <path class="eye-crease" fill="none" stroke="${t.crease}" stroke-width="2.2" stroke-linecap="round" opacity="0.5" filter="url(#${id}-blur1)"/>
+                <path class="eye-lidfold" fill="none" stroke="#fff" stroke-width="3" opacity="0.18" filter="url(#${id}-blur1)"/>
+                <path d="M30 98 C70 116 130 116 170 98" fill="none" stroke="${t.socket}" stroke-width="5" opacity="0.15" filter="url(#${id}-blur4)"/>
+            </g>
+
+            <!-- the eyeball, seen through the lid opening -->
+            <g clip-path="url(#${id}-clip)">
+                <rect x="0" y="0" width="200" height="120" fill="url(#${id}-sclera)"/>
+                <g opacity="${t.veinAlpha}">${veins}</g>
+                <ellipse cx="15" cy="61" rx="7" ry="5.5" fill="#d98d86" opacity="0.85" filter="url(#${id}-blur1)"/>
+                <path d="M21 52 Q25 61 21 70" stroke="#c97c76" stroke-width="1.2" fill="none" opacity="0.6"/>
+                <g class="eye-look">
+                    <circle cx="${cx}" cy="${cy}" r="${irisR + 1.5}" fill="${t.rim}" opacity="0.35" filter="url(#${id}-blur1)"/>
+                    <circle cx="${cx}" cy="${cy}" r="${irisR}" fill="url(#${id}-iris)"/>
+                    <circle cx="${cx}" cy="${cy}" r="${irisR}" fill="#000" filter="url(#${id}-noise)" opacity="0.55"/>
+                    <g>${fibres}</g>
+                    ${crypts}
+                    <path d="${collar}Z" fill="none" stroke="${t.collar}" stroke-width="1.6" opacity="0.55" filter="url(#${id}-blur03)"/>
+                    <circle cx="${cx}" cy="${cy}" r="${irisR}" fill="url(#${id}-limbal)"/>
+                    <circle class="eye-pupil" cx="${cx}" cy="${cy}" r="${pupilR}" fill="url(#${id}-pupil)"/>
+                    <circle class="eye-pring" cx="${cx}" cy="${cy}" r="${pupilR + 0.6}" fill="none" stroke="${t.fibreDark}" stroke-width="1" opacity="0.5"/>
                 </g>
-                <path d="M8 60 C52 4 148 4 192 60" fill="none" stroke="${t.lid}" stroke-width="3.6" stroke-linecap="round"/>
-                <path d="M8 60 C52 112 148 112 192 60" fill="none" stroke="${t.lid}" stroke-width="1.4" stroke-opacity="0.7" stroke-linecap="round"/>
-                <circle cx="13" cy="60" r="3" fill="${t.veins || '#e7a9a9'}" opacity="0.55"/>
-                ${lashes}
-            </g>`;
-        return svg;
+                <!-- shadow the upper lid casts on the eyeball -->
+                <path class="eye-lidshadow" fill="none" stroke="#000" stroke-width="16" opacity="0.42" filter="url(#${id}-blur4)"/>
+                <path class="eye-lowshadow" fill="none" stroke="#000" stroke-width="6" opacity="0.15" filter="url(#${id}-blur4)"/>
+                <!-- wet highlights -->
+                <path d="M84 41 l9 -2.2 q1.6 -.3 1.9 1.3 l1.2 6.2 q.3 1.6 -1.3 2 l-9 2.2 q-1.6 .3 -1.9 -1.3 l-1.2 -6.2 q-.3 -1.6 1.3 -2z" fill="#fff" opacity="0.88" filter="url(#${id}-blur03)"/>
+                <circle cx="113" cy="70" r="1.6" fill="#fff" opacity="0.55"/>
+                <ellipse cx="52" cy="58" rx="16" ry="7" fill="#fff" opacity="0.18" filter="url(#${id}-blur4)"/>
+            </g>
+
+            <!-- lid edges, waterline and lashes (redrawn as the lids move) -->
+            <path class="eye-waterline" fill="none" stroke="${t.waterline}" stroke-width="2.6" stroke-linecap="round" opacity="0.95"/>
+            <path class="eye-wet" fill="none" stroke="#fff" stroke-width="0.7" opacity="0.55"/>
+            <path class="eye-lidline" fill="none" stroke="${t.lidEdge}" stroke-width="3.2" stroke-linecap="round"/>
+            <g class="eye-lashes-low">${lowerEls}</g>
+            <g class="eye-lashes">${lashEls}</g>`;
+
+        // per-lash randomness that stays fixed while the lids move
+        const lashSeeds = Array.from({ length: lashCount }, () => [R(), R(), R()]);
+        const lowerSeeds = Array.from({ length: lowerCount }, () => [R(), R()]);
+
+        const el = {
+            clip: svg.querySelector('.eye-clip'),
+            socket: svg.querySelector('.eye-socket'),
+            crease: svg.querySelector('.eye-crease'),
+            fold: svg.querySelector('.eye-lidfold'),
+            lidShadow: svg.querySelector('.eye-lidshadow'),
+            lowShadow: svg.querySelector('.eye-lowshadow'),
+            waterline: svg.querySelector('.eye-waterline'),
+            wet: svg.querySelector('.eye-wet'),
+            lidline: svg.querySelector('.eye-lidline'),
+            lashes: [...svg.querySelectorAll('.lash')],
+            lower: [...svg.querySelectorAll('.lash-low')],
+            look: svg.querySelector('.eye-look'),
+            pupil: svg.querySelector('.eye-pupil'),
+            pring: svg.querySelector('.eye-pring'),
+        };
+
+        const state = { open: 1, wide: 0, lx: 0, ly: 0, svg, el, lashSeeds, lowerSeeds };
+        renderEye(state);
+        return state;
+    }
+
+    // Lid geometry: c = upper-lid control y, d = lower-lid control y.
+    function renderEye(s) {
+        const { el } = s;
+        const closed = 1 - s.open;
+        // lids follow the gaze a little: looking up lifts the upper lid, looking down drops it
+        const c = lerp(68, lerp(20, 8, s.wide), s.open) + s.ly * 0.55;
+        const d = lerp(72, 104, s.open) + s.ly * 0.25;
+        const up = upperPath(c), low = lowerPath(d);
+
+        el.clip.setAttribute('d', openingPath(c, d));
+        el.socket.setAttribute('d', openingPath(c - 4, d + 3));
+        const creaseC = lerp(c - 26, -14, 0.55);
+        el.crease.setAttribute('d', `M22 46 C60 ${creaseC.toFixed(1)} 140 ${creaseC.toFixed(1)} 178 46`);
+        el.fold.setAttribute('d', `M26 52 C62 ${(creaseC + 9).toFixed(1)} 138 ${(creaseC + 9).toFixed(1)} 174 52`);
+        el.lidShadow.setAttribute('d', `M8 ${60 - 3} C52 ${(c - 3).toFixed(1)} 148 ${(c - 3).toFixed(1)} 192 ${60 - 3}`);
+        el.lowShadow.setAttribute('d', low);
+        el.waterline.setAttribute('d', `M14 61 C54 ${(d - 3.2).toFixed(1)} 146 ${(d - 3.2).toFixed(1)} 186 61`);
+        el.wet.setAttribute('d', `M30 62 C62 ${(d - 6).toFixed(1)} 138 ${(d - 6).toFixed(1)} 170 62`);
+        el.lidline.setAttribute('d', up);
+        el.waterline.style.opacity = (0.95 * s.open).toFixed(2);
+        el.wet.style.opacity = (0.55 * s.open).toFixed(2);
+
+        // upper lashes: sweep up and out when open, droop down when the lid closes
+        const n = el.lashes.length;
+        el.lashes.forEach((p, i) => {
+            const [r1, r2, r3] = s.lashSeeds[i];
+            const tt = 0.04 + (i / (n - 1)) * 0.92 + (r3 - 0.5) * 0.012;
+            const x = bez(tt, 8, 52, 148, 192), y = bez(tt, 60, c, c, 60);
+            let tx = bezD(tt, 8, 52, 148, 192), ty = bezD(tt, 60, c, c, 60);
+            const tl = Math.hypot(tx, ty) || 1; tx /= tl; ty /= tl;
+            let nx = ty, ny = -tx;
+            if (ny > 0) { nx = -nx; ny = -ny; }
+            const mid = Math.sin(tt * Math.PI);
+            const L = (4 + mid * 10) * (0.65 + r1 * 0.6);
+            const side = (tt - 0.5) * 2;
+            const dirY = lerp(ny, -ny * 0.55, closed);          // flips downward as the eye shuts
+            const ex = x + nx * L + side * L * 0.55 + (r2 - 0.5) * 5;
+            const ey = y + dirY * L;
+            const qx = x + nx * L * 0.45 + side * L * 0.05;
+            const qy = y + dirY * L * 0.75;
+            p.setAttribute('d', `M${x.toFixed(1)} ${y.toFixed(1)} Q${qx.toFixed(1)} ${qy.toFixed(1)} ${ex.toFixed(1)} ${ey.toFixed(1)}`);
+            p.setAttribute('stroke-width', (0.4 + mid * 0.55 + r1 * 0.3).toFixed(2));
+            p.style.opacity = (0.6 + r2 * 0.4).toFixed(2);
+        });
+
+        // lower lashes: short, sparse, pointing down and out
+        const m = el.lower.length;
+        el.lower.forEach((p, i) => {
+            const [r1, r2] = s.lowerSeeds[i];
+            const tt = 0.14 + (i / (m - 1)) * 0.78;
+            const x = bez(tt, 8, 52, 148, 192), y = bez(tt, 60, d, d, 60);
+            const side = (tt - 0.5) * 2;
+            const L = (2.5 + Math.sin(tt * Math.PI) * 3.5) * (0.7 + r1 * 0.6);
+            p.setAttribute('d', `M${x.toFixed(1)} ${(y + 0.8).toFixed(1)} q${(side * L * 0.3).toFixed(1)} ${(L * 0.6).toFixed(1)} ${(side * L * 0.7 + (r2 - 0.5)).toFixed(1)} ${L.toFixed(1)}`);
+            p.setAttribute('stroke-width', (0.4 + r1 * 0.35).toFixed(2));
+            p.style.opacity = (0.75 * s.open).toFixed(2);
+        });
+
+        el.look.setAttribute('transform', `translate(${s.lx.toFixed(2)} ${s.ly.toFixed(2)})`);
     }
 
     const eyes = $$('[data-eye]').map(svg => buildEye(svg, svg.dataset.eye));
     const eye = $('#eye');
+    const oracleEye = eyes.find(s => s.svg === eye);
 
-    // look at the pointer; pupils shrink a little when the pointer gets close
+    // look at the pointer (iris moves, lids follow)
+    let lookFrame = 0, lastPointer = null;
     window.addEventListener('pointermove', e => {
-        eyes.forEach(svg => {
-            const r = svg.getBoundingClientRect();
-            if (!r.width) return;
-            const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
-            const a = Math.atan2(e.clientY - cy, e.clientX - cx);
-            const dist = Math.hypot(e.clientX - cx, e.clientY - cy);
-            const d = Math.min(1, dist / 260);
-            const tx = Math.cos(a) * 16 * d, ty = Math.sin(a) * 9 * d;
-            svg.querySelector('.eye-look').setAttribute('transform', `translate(${tx.toFixed(1)} ${ty.toFixed(1)})`);
-            if (!svg.classList.contains('awake')) {
-                svg.querySelector('.eye-pupil').style.r = (8.5 + Math.min(1, dist / 400) * 4).toFixed(1);
-            }
+        lastPointer = e;
+        if (lookFrame) return;
+        lookFrame = requestAnimationFrame(() => {
+            lookFrame = 0;
+            eyes.forEach(s => {
+                const r = s.svg.getBoundingClientRect();
+                if (!r.width) return;
+                const ex = r.left + r.width / 2, ey = r.top + r.height * 0.5;
+                const a = Math.atan2(lastPointer.clientY - ey, lastPointer.clientX - ex);
+                const k = Math.min(1, Math.hypot(lastPointer.clientX - ex, lastPointer.clientY - ey) / 280);
+                s.lx = Math.cos(a) * 26 * k;
+                s.ly = Math.sin(a) * 12 * k;
+                renderEye(s);
+            });
         });
     });
 
-    function blink(svg) {
-        svg.classList.add('blinking');
-        setTimeout(() => svg.classList.remove('blinking'), 150);
+    // blink: the upper lid sweeps down and back up; the lower lid rises a touch
+    function blink(s) {
+        if (s.blinking) return;
+        s.blinking = true;
+        const down = 75, hold = 35, upDur = 150;
+        const t0 = performance.now();
+        const step = now => {
+            const t = now - t0;
+            if (t < down) s.open = 1 - Math.pow(t / down, 2);
+            else if (t < down + hold) s.open = 0;
+            else if (t < down + hold + upDur) s.open = 1 - Math.pow(1 - (t - down - hold) / upDur, 3);
+            else { s.open = 1; s.blinking = false; renderEye(s); return; }
+            renderEye(s);
+            requestAnimationFrame(step);
+        };
+        requestAnimationFrame(step);
     }
-    eyes.forEach(svg => (function loop() {
+    eyes.forEach(s => (function loop() {
         setTimeout(() => {
-            blink(svg);
-            if (Math.random() < 0.25) setTimeout(() => blink(svg), 260);   // sometimes a double blink
+            if (!reduceMotion) {
+                blink(s);
+                if (Math.random() < 0.22) setTimeout(() => blink(s), 330);   // sometimes a double blink
+            }
             loop();
         }, 2600 + Math.random() * 5200);
     })());
 
-    // the oracle's eye wakes up (pupil blows wide, glow brightens) while she speaks
+    // the oracle's eye wakes up while she speaks: lids open wide, pupil blows open
     function eyeAwake(on) {
+        if (!oracleEye) return;
         eye.classList.toggle('awake', on);
-        eye.querySelector('.eye-pupil').style.r = on ? '17' : '11.5';
+        const from = oracleEye.wide, to = on ? 1 : 0, t0 = performance.now();
+        const step = now => {
+            const k = Math.min(1, (now - t0) / 400);
+            oracleEye.wide = lerp(from, to, 1 - Math.pow(1 - k, 2));
+            renderEye(oracleEye);
+            if (k < 1) requestAnimationFrame(step);
+        };
+        requestAnimationFrame(step);
+        oracleEye.el.pupil.style.r = on ? '17' : String(EYE.pupilR);
+        oracleEye.el.pring.style.r = on ? '17.6' : String(EYE.pupilR + 0.6);
     }
 
     // ---------- pop-ups ----------
